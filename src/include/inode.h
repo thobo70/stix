@@ -55,6 +55,13 @@ typedef struct iinode_t
  */
 void init_inodes(void);
 
+/**
+ * @brief find inode in hash or setup a new one
+ * 
+ * @param dev         device of filesystem containing the inode
+ * @param inum        number of inode
+ * @return iinode_t*  pointer to inode or NULL of free in core inodes available
+ */
 iinode_t *iget(ldev_t dev, ninode_t inum);
 
 /**
