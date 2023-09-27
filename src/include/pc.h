@@ -1,6 +1,8 @@
 #ifndef _PC_H
 #define _PC_H
 
+#include "tdefs.h"
+
 enum waitfor {
   RUNHIGH,
   RUNMID,

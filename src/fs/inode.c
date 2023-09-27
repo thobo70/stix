@@ -106,10 +106,13 @@ void move_inode_to_hashqueue(iinode_t *inode, ldev_t dev, ninode_t inum)
 
 
 
-/**
- * @brief init inodes 
- * 
- */
+void ifree(iinode_t *inode)
+{
+
+}
+
+
+
 void init_inodes(void)
 {
   memset(iinode, 0, sizeof(iinode));
@@ -156,11 +159,6 @@ iinode_t *iget(ldev_t dev, ninode_t inum)
 
 
 
-/**
- * @brief release access to in core inode
- * 
- * @param inode   in core inode
- */
 void iput(iinode_t *inode)
 {
   inode->locked = true;
@@ -176,6 +174,7 @@ void iput(iinode_t *inode)
     add_inode_to_freelist(inode, false);
   }
   inode->locked = false;
+  wakeall(INODELOCKED);
 }
 
 void bmap(void)
@@ -187,12 +186,6 @@ void ialloc(void)
 {
 
 }
-
-void ifree(iinode_t *inode)
-{
-
-}
-
 
 void namei(void)
 {

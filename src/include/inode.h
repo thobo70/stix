@@ -48,4 +48,20 @@ typedef struct iinode_t
 } iinode_t;
 
 
+
+/**
+ * @brief init inodes 
+ * 
+ */
+void init_inodes(void);
+
+iinode_t *iget(ldev_t dev, ninode_t inum);
+
+/**
+ * @brief release access to in core inode
+ * 
+ * @param inode   in core inode
+ */
+void iput(iinode_t *inode);
+
 #endif
