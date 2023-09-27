@@ -51,4 +51,20 @@ void add_free_first(bhead_t *b);
 void add_free_last(bhead_t *b);
 
 
+/**
+ * @brief read block from device dev
+ * 
+ * @param dev       device to read from
+ * @param block     block to read
+ * @return bhead_t* pointer to block header read from disk
+ */
+bhead_t *bread(ldev_t dev, block_t block);
+
+/**
+ * @brief release buffer 
+ * 
+ * @param b buffer to release
+ */
+void brelse(bhead_t *b);
+
 #endif
