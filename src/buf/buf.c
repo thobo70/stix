@@ -28,6 +28,8 @@ buffer_t buf[NBUFFER];
 bhead_t *hashtab[HTABSIZE];
 bhead_t *freelist = NULL;
 
+void sync_buffer_to_disk(bhead_t *b);
+void sync_buffer_from_disk(bhead_t *b);
 
 /**
  * @brief remove buffer from free list
@@ -149,10 +151,7 @@ bhead_t *getblk(ldev_t dev, block_t block)
 
 void brelse(bhead_t *b)
 {
-  if (b->valid)
-    add_free_last(b);
-  else
-    add_free_first(b);
+  add_buf_to_freelist(b, !b->valid);
   b->busy = false;
   wakeall(BLOCKBUSY);
 }
@@ -179,10 +178,7 @@ void buffer_synced(bhead_t *b, int err)
 {
   b->dwrite = false;
   b->valid = (err == 0);
-  if (err)
-    add_free_first(b);
-  else
-    add_free_last(b);
+  add_buf_to_freelist(b, !b->valid);
 }
 
 
@@ -191,4 +187,10 @@ void sync_buffer_to_disk(bhead_t *b)
   if (bwrite)
     bwrite->fprev = b;
   bwrite = b;
+}
+
+
+void sync_buffer_from_disk(bhead_t *b)
+{
+
 }

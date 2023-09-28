@@ -20,14 +20,22 @@
 #define HTABSIZE (1 << HTABSIZEBITS)
 #define HTABMASK (HTABSIZE - 1)
 #define HTABVALUE(dev, inum) ((inum) & HTABMASK)
-#define HTAB(dev, inum) hashtab[HTABVALUE(dev, inum)]
+#define HTAB(dev, inum) ihashtab[HTABVALUE(dev, inum)]
 
 iinode_t iinode[NINODES];
 
-iinode_t *hashtab[HTABSIZE];
-iinode_t *freelist = NULL;
+iinode_t *ihashtab[HTABSIZE];
+iinode_t *ifreelist = NULL;
 
+void free_all_blocks(iinode_t *inode)
+{
 
+}
+
+void update_inode_on_disk(iinode_t *inode)
+{
+
+}
 
 /**
  * @brief remove inode from free list
@@ -39,10 +47,10 @@ void remove_inode_from_freelist(iinode_t *inode)
   if (!inode->fnext)
     return;
   if (inode->fnext == inode) {
-    freelist = NULL;
+    ifreelist = NULL;
   } else {
-    if (inode == freelist) 
-      freelist = inode->fnext;
+    if (inode == ifreelist) 
+      ifreelist = inode->fnext;
     inode->fprev->fnext = inode->fnext;
     inode->fnext->fprev = inode->fprev;
   }
@@ -59,15 +67,15 @@ void remove_inode_from_freelist(iinode_t *inode)
  */
 void add_inode_to_freelist(iinode_t *inode, int asFirst)
 {
-  if (freelist) {
-    inode->fprev = freelist->fprev;
-    inode->fnext = freelist;
-    freelist->fprev->fnext = inode;
-    freelist->fprev = inode;
+  if (ifreelist) {
+    inode->fprev = ifreelist->fprev;
+    inode->fnext = ifreelist;
+    ifreelist->fprev->fnext = inode;
+    ifreelist->fprev = inode;
     if (asFirst)
-      freelist = inode;
+      ifreelist = inode;
   } else {
-    freelist = inode;
+    ifreelist = inode;
     inode->fnext = inode;
     inode->fprev = inode;
   }
@@ -116,7 +124,7 @@ void ifree(iinode_t *inode)
 void init_inodes(void)
 {
   memset(iinode, 0, sizeof(iinode));
-  memset(hashtab, 0, sizeof(hashtab));
+  memset(ihashtab, 0, sizeof(ihashtab));
 
   for ( int i ; i < NBUFFER ; ++i ) 
     add_inode_to_freelist(&iinode[i], 0);
@@ -142,7 +150,7 @@ iinode_t *iget(ldev_t dev, ninode_t inum)
       found->nref++;
       return found;
     }
-    found = freelist;
+    found = ifreelist;
     if (!found) {
       /// TODO: error no free inodes
       return NULL;
