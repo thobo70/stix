@@ -150,7 +150,7 @@ iinode_t *iget(ldev_t dev, ninode_t inum)
     remove_inode_from_freelist(found);
     move_inode_to_hashqueue(found, dev, inum);
     bhead = bread(dev, INODEBLOCK(inum, SUPERBLOCKINODE(dev)));
-    mcpy(&found->dinode, &bhead->buf[INODEOFFSET(inum)], sizeof(dinode_t));
+    mcpy(&found->dinode, &bhead->buf->mem[INODEOFFSET(inum)], sizeof(dinode_t));
     brelse(bhead);
     found->nref = 1;
     return found;
