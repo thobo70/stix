@@ -60,9 +60,9 @@ void remove_inode_from_freelist(iinode_t *inode)
 void add_inode_to_freelist(iinode_t *inode, int asFirst)
 {
   if (freelist) {
-    freelist->fprev->fnext = inode;
     inode->fprev = freelist->fprev;
     inode->fnext = freelist;
+    freelist->fprev->fnext = inode;
     freelist->fprev = inode;
     if (asFirst)
       freelist = inode;
@@ -100,8 +100,8 @@ void move_inode_to_hashqueue(iinode_t *inode, ldev_t dev, ninode_t inum)
   } else {
     inode->hprev = inode;
     inode->hnext = inode;    
+    HTAB(dev, inum) = inode;
   }
-  HTAB(dev, inum) = inode;
 }
 
 

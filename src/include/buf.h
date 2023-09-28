@@ -37,18 +37,12 @@ void init_buffers(void);
 
 
 /**
- * @brief add block to free at top
+ * @brief add block to free list
  * 
  * @param b 
+ * @param asFirst 
  */
-void add_free_first(bhead_t *b);
-
-/**
- * @brief add block to free list at bottom
- * 
- * @param b 
- */
-void add_free_last(bhead_t *b);
+void add_buf_to_freelist(bhead_t *b, int asFirst);
 
 
 /**

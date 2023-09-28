@@ -26,8 +26,52 @@ bhead_t bufhead[NBUFFER];
 buffer_t buf[NBUFFER];
 
 bhead_t *hashtab[HTABSIZE];
-bhead_t *freefirst = NULL;
-bhead_t *freelast = NULL;
+bhead_t *freelist = NULL;
+
+
+/**
+ * @brief remove buffer from free list
+ * 
+ * @param b 
+ */
+void remove_buf_from_freelist(bhead_t *b)
+{
+  if (!b->infreelist)
+    return;
+
+  if (b == b->fnext)
+    freelist = NULL;
+  else {
+    if (b == freelist)
+      freelist = b->fnext;
+    b->fnext->fprev = b->fprev;
+    b->fprev->fnext = b->fnext;
+  }
+
+  b->infreelist = false;
+}
+
+
+
+void add_buf_to_freelist(bhead_t *b, int asFirst)
+{
+  if (b->infreelist)
+    return;
+  if (freelist) {
+    b->fnext = freelist;
+    b->fprev = freelist->fprev;
+    freelist->fprev->fnext = b;
+    freelist->fprev = b;
+    if (asFirst)
+      freelist = b;
+  } else {
+    freelist = b;
+    b->fnext = b;
+    b->fprev = b;
+  }
+  b->infreelist = true;
+}
+
 
 
 void init_buffers(void)
@@ -35,90 +79,35 @@ void init_buffers(void)
   memset(bufhead, 0, sizeof(bufhead));
   memset(hashtab, 0, sizeof(hashtab));
 
-  for ( int i ; i < NBUFFER ; ++i ) {
-    bhead_t *b = &bufhead[i];
-    b->buf = &buf[i];
-    if (!freelast)
-      freelast = b;
-    if (freefirst)
-      freefirst->fprev = b;
-    b->fnext = freefirst;
-    freefirst = b; 
-    b->infreelist = true;
+  for ( int i ; i < NBUFFER ; ++i ) 
+    add_buf_to_freelist(&bufhead[i], false);
+}
+
+
+
+void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
+{
+  bhead_t *p = HTAB(dev, block);
+
+  b->valid = false;
+  if (b->hnext) {
+    if (b->hnext == b)
+      HTAB(b->dev, b->block) = NULL;
+    else
+      HTAB(b->dev, b->block) = b->hnext;
+    b->hprev->hnext = b->hnext;
+    b->hnext->hprev = b->hprev;
   }
-}
-
-
-/**
- * @brief remove block from free list
- * 
- * @param b 
- */
-void remove_from_free_list(bhead_t *b)
-{
-  bhead_t *p = b->fprev, *n = b->fnext;
-
-  if (!b->infreelist)
-    return;
-
-  if (p)
-    p->fnext = n;
-  else
-    freefirst = n;
-  if (n)
-    n->fnext = p;
-  else
-    freelast = p;
-
-  b->infreelist = false;
-}
-
-
-
-void add_free_first(bhead_t *b)
-{
-  if (b->infreelist)
-    return;
-  b->fprev = NULL;
-  b->fnext = freefirst;
-  freefirst = b;
-  if (!freelast)
-    freelast = b;
-  b->infreelist = true;
-}
-
-
-void add_free_last(bhead_t *b)
-{
-  if (b->infreelist)
-    return;
-  b->fnext = NULL;
-  b->fprev = freelast;
-  freelast = b;
-  if (!freefirst)
-    freefirst = b;
-  b->infreelist = true;
-}
-
-
-
-void move_to_new_hashqueue(bhead_t *b, ldev_t dev, block_t block)
-{
-  bhead_t *p = b->hprev, *n = b->hnext;
-
-  if (HTAB(b->dev, b->block) == b)
-    HTAB(b->dev, b->block) = n;
-  if (p)
-    p->hnext = n;
-  if (n)
-    n->hprev = p;
-
-  b->hprev = NULL;
-  b->hnext = HTAB(dev, block);
-  HTAB(dev, block) = b;
   b->dev = dev;
   b->block = block;
-  b->valid = false;
+  if (p) {
+    p->hprev->hnext = b;
+    p->hprev = b;
+  } else {
+    b->hprev = b;
+    b->hnext = b;
+    HTAB(dev, block) = b;
+  }
 }
 
 
@@ -136,21 +125,21 @@ bhead_t *getblk(ldev_t dev, block_t block)
         continue;
       }
       found->busy = true;
-      remove_from_free_list(found);
+      remove_buf_from_freelist(found);
       return found;
     } else {
-      found = freefirst;
+      found = freelist;
       if (!found) {
         waitfor(NOFREEBLOCKS);
         continue;
       }
-      remove_from_free_list(found);
+      remove_buf_from_freelist(found);
       if (found->dwrite) {
         sync_buffer_to_disk(found);
         continue;
       }
       found->busy = true;
-      move_to_new_hashqueue(found, dev, block);
+      move_buf_to_hashqueue(found, dev, block);
       return found;
     }
   }
