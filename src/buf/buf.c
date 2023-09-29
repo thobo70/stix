@@ -1,12 +1,18 @@
 /**
  * @file buf.c
- * @author Thomas Boos
+ * @author Thomas Boos (tboos70@gmail.com)
  * @brief buffer handling
  * @version 0.1
- * @date 2023-09-23
+ * @date 2023-09-29
  * 
  * @copyright Copyright (c) 2023
  * 
+ */
+
+/**
+@startuml
+Alice -> Bob: test
+@enduml
  */
 
 #include "utils.h"

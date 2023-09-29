@@ -13,7 +13,7 @@ sudo apt install doxygen doxygen-latex doxygen-doc doxygen-gui graphviz xapian-t
 ## Sources of documents
 for inspiration you can read following documents. Especially the first link covers the aimed functionality best
  * https://books.google.de/books/about/The_Design_of_the_UNIX_Operating_System.html?id=NrBQAAAAMAAJ&redir_esc=y
- * https://www.google.de/books/edition/Lions_Commentary_on_UNIX_6th_Edition_wit/OlZ3QgAACAAJ
+ * https://warsus.github.io/lions-/
 
 
 
