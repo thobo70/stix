@@ -12,6 +12,13 @@
 #include "inode.h"
 #include "buf.h"
 
+/**
+ * @brief main of mockup
+ * 
+ * @param argc 
+ * @param argv 
+ * @return int 
+ */
 int main(int argc, char *argv[])
 {
   init_buffers();

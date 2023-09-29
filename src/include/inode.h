@@ -2,6 +2,7 @@
 #define _INODE_H
 
 #include "tdefs.h"
+#include "blocks.h"
 #include "dd.h"
 
 #define NINODES 50

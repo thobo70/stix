@@ -86,7 +86,13 @@ void init_buffers(void)
 }
 
 
-
+/**
+ * @brief unlink b from old queue and add to new hash queue
+ * 
+ * @param b 
+ * @param dev 
+ * @param block 
+ */
 void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
 {
   bhead_t *p = HTAB(dev, block);
@@ -113,7 +119,13 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
 }
 
 
-
+/**
+ * @brief looks for a block from dev in hash or tries to load it
+ * 
+ * @param dev 
+ * @param block 
+ * @return bhead_t* 
+ */
 bhead_t *getblk(ldev_t dev, block_t block)
 {
   bhead_t *found = NULL;
@@ -181,7 +193,11 @@ void buffer_synced(bhead_t *b, int err)
   add_buf_to_freelist(b, !b->valid);
 }
 
-
+/**
+ * @brief trigger async write of b
+ * 
+ * @param b 
+ */
 void sync_buffer_to_disk(bhead_t *b)
 {
   if (bwrite)
@@ -189,7 +205,11 @@ void sync_buffer_to_disk(bhead_t *b)
   bwrite = b;
 }
 
-
+/**
+ * @brief trigger async load of b
+ * 
+ * @param b 
+ */
 void sync_buffer_from_disk(bhead_t *b)
 {
 
