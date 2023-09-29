@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 project(
   os
   VERSION 0.1.1
-  DESCRIPTION "a clone of early unix"
+  DESCRIPTION "a clone of an early unix"
   LANGUAGES C
 )
 
@@ -31,7 +31,7 @@ target_include_directories(
 )
 
 add_test(
-  mockup_test
+  NAME mockup_test
   COMMAND mockup
 )
 
