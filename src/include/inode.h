@@ -1,3 +1,14 @@
+/**
+ * @file inode.h
+ * @author Thomas Boos (tboos70@gmail.com)
+ * @brief inode handling
+ * @version 0.1
+ * @date 2023-09-29
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #ifndef _INODE_H
 #define _INODE_H
 

@@ -1,3 +1,14 @@
+/**
+ * @file tdefs.h
+ * @author Thomas Boos (tboos70@gmail.com)
+ * @brief global type definitions
+ * @version 0.1
+ * @date 2023-09-29
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #ifndef _TDEFS_H
 #define _TDEFS_H
 

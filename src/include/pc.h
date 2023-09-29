@@ -1,3 +1,13 @@
+/**
+ * @file pc.h
+ * @author Thomas Boos (tboos70@gmail.com)
+ * @brief process control
+ * @version 0.1
+ * @date 2023-09-29
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #ifndef _PC_H
 #define _PC_H
 

@@ -27,11 +27,24 @@ iinode_t iinode[NINODES];
 iinode_t *ihashtab[HTABSIZE];
 iinode_t *ifreelist = NULL;
 
+
+
+/**
+ * @brief free all blocks assigned to this inode
+ * 
+ * @param inode 
+ */
 void free_all_blocks(iinode_t *inode)
 {
 
 }
 
+
+/**
+ * @brief write inode to disk
+ * 
+ * @param inode 
+ */
 void update_inode_on_disk(iinode_t *inode)
 {
 
@@ -121,6 +134,10 @@ void ifree(iinode_t *inode)
 
 
 
+/**
+ * @brief init inodes
+ * 
+ */
 void init_inodes(void)
 {
   memset(iinode, 0, sizeof(iinode));
@@ -131,6 +148,13 @@ void init_inodes(void)
 }
 
 
+/**
+ * @brief searches inode in hashlist or sets up a new one
+ * 
+ * @param dev 
+ * @param inum 
+ * @return iinode_t* inode or NULL if not found and no free inode left
+ */
 iinode_t *iget(ldev_t dev, ninode_t inum)
 {
   iinode_t *found = NULL;
@@ -145,14 +169,14 @@ iinode_t *iget(ldev_t dev, ninode_t inum)
         waitfor(INODELOCKED);
         continue;
       }
-      /// TODO: mount points !!!
+      /// @todo mount points !!!
       remove_inode_from_freelist(found);
       found->nref++;
       return found;
     }
     found = ifreelist;
     if (!found) {
-      /// TODO: error no free inodes
+      /// @todo error no free inodes
       return NULL;
     }
     remove_inode_from_freelist(found);
@@ -167,6 +191,11 @@ iinode_t *iget(ldev_t dev, ninode_t inum)
 
 
 
+/**
+ * @brief releases inode
+ * 
+ * @param inode 
+ */
 void iput(iinode_t *inode)
 {
   inode->locked = true;
