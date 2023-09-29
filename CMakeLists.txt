@@ -22,6 +22,7 @@ add_executable(
   src/buf/buf.c
   src/fs/fs.c
   src/fs/inode.c
+  src/fs/blocks.c
 )
 
 target_include_directories(
@@ -33,6 +34,7 @@ add_test(
   mockup_test
   COMMAND mockup
 )
+
 set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
 set(DOXYGEN_GENERATE_HTML YES)
 set(DOXYGEN_GENERATE_MAN YES)
@@ -43,5 +45,4 @@ set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
 
 doxygen_add_docs(
   docs
-  $(CMAKE_CURRENT_SOURCE_DIR)
 )
