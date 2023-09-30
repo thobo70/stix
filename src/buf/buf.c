@@ -7,12 +7,10 @@
  * 
  * @copyright Copyright (c) 2023
  * 
- */
-
-/**
-@startuml
-Alice -> Bob: test
-@enduml
+ * @startuml
+ * Alice -> Bob: test
+ * Bob -> Alice: no
+ * @enduml
  */
 
 #include "utils.h"
