@@ -4,8 +4,10 @@ project(
   os
   VERSION 0.1.1
   DESCRIPTION "a clone of an early unix"
-  LANGUAGES C
+  LANGUAGES C 
 )
+
+find_package(Java 8 COMPONENTS Runtime)
 
 include(CTest)
 
