@@ -9,7 +9,9 @@
  * 
  * @startuml
  * Alice -> Bob: test
- * Bob -> Alice: no
+ * Bob -> Bob: thinks
+ * Bob -> Nena: really
+ * Nena -> Alice: no
  * @enduml
  */
 
@@ -124,7 +126,36 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
 
 
 /**
- * @brief looks for a block from dev in hash or tries to load it
+ * @brief looks for a buffer containing block from dev in hash or tries to get a free buffer
+ * 
+ * @startuml
+ * start
+ * repeat
+ *   if (block in hash queue) then (yes)
+ *     if (buffer is busy) then (yes)
+ *       : sleep(event buffer becomes free);
+ *     else (no)
+ *       : mark buffer as busy;
+ *       : remove buffer from free list;
+ *       : return buffer;
+ *     stop
+ *     endif
+ *   else (no)
+ *     if (freelist empty) then (yes)
+ *       : sleep(event any buffer gets free);
+ *     else (no)
+ *       : remove buffer from free list;
+ *       if (buffer marked for delayed write) then (yes)
+ *         : async write buffer;
+ *       else (no)
+ *         : move buffer from old to new hash queue;
+ *         : return buffer;
+ *         stop
+ *       endif
+ *     endif
+ *   endif
+ * repeat while (endless)
+ * @enduml
  * 
  * @param dev 
  * @param block 
