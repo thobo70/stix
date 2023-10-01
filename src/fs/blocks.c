@@ -16,5 +16,8 @@
 isuperblock_t isblock[MAXFS];
 
 
-
+void freeblock(fsnum_t fs, block_t  bl)
+{
+  /// TODO set bit for block bl in bitfield of fs to 0
+}
 

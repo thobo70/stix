@@ -40,4 +40,6 @@ typedef struct isuperblock {
     word_t fblocks[NFREEBLOCKS];
 } isuperblock_t;
 
+void freeblock(fsnum_t fs, block_t  bl);
+
 #endif

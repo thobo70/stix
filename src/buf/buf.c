@@ -205,21 +205,7 @@ void brelse(bhead_t *b)
 
 
 
-bhead_t *bread(ldev_t dev, block_t block)
-{
-  bhead_t *b = getblk(dev, block);
-
-  if (b->valid)
-    return b;
-
-  sync_buffer_from_disk(b);
-  while (!b->valid)
-    waitfor(BLOCKREAD);
-
-  return b;
-}
-
-bhead_t *bwrite = NULL;
+bhead_t *writequeue = NULL;
 
 void buffer_synced(bhead_t *b, int err)
 {
@@ -235,9 +221,9 @@ void buffer_synced(bhead_t *b, int err)
  */
 void sync_buffer_to_disk(bhead_t *b)
 {
-  if (bwrite)
-    bwrite->fprev = b;
-  bwrite = b;
+  if (writequeue)
+    writequeue->fprev = b;
+  writequeue = b;
 }
 
 /**
@@ -248,4 +234,32 @@ void sync_buffer_to_disk(bhead_t *b)
 void sync_buffer_from_disk(bhead_t *b)
 {
 
+}
+
+
+
+bhead_t *bread(ldev_t dev, block_t block)
+{
+  bhead_t *b = getblk(dev, block);
+
+  if (b->valid)
+    return b;
+
+  sync_buffer_from_disk(b);
+  while (!b->valid)
+    waitfor(BLOCKREAD);
+
+  return b;
+}
+
+
+
+void bwrite(bhead_t *b)
+{
+  b->written = false;
+  if (!b->dwrite) {
+    sync_buffer_to_disk(b);
+    while (!b->written)
+      waitfor(BLOCKWRITE); 
+  }
 }

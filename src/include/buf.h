@@ -34,6 +34,7 @@ typedef struct bhead_t {
   byte_t busy : 1;
   byte_t dwrite : 1;
   byte_t valid : 1;
+  byte_t written : 1;
   byte_t infreelist : 1;
   ldev_t dev;
   block_t block;
@@ -64,6 +65,8 @@ void add_buf_to_freelist(bhead_t *b, int asFirst);
  * @return bhead_t* pointer to block header read from disk
  */
 bhead_t *bread(ldev_t dev, block_t block);
+
+void bwrite(bhead_t *b);
 
 /**
  * @brief release buffer 

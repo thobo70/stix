@@ -16,11 +16,10 @@
 #include "blocks.h"
 #include "dd.h"
 
-#define NINODES 50
+#define NINODES 50          ///< number of inodes in system
 
-#define NINODESBLOCK  (BLOCKSIZE / sizeof(dinode_t))
-#define INODEBLOCK(inum, startblock) (((inum - 1) / NINODESBLOCK) + startblock)
-#define INODEOFFSET(inum) (((inum - 1) % NINODESBLOCK) * sizeof(dinode_t))
+#define NBLOCKREFS 12       ///< number of block references in inode
+#define STARTREFSLEVEL 10   ///< index of start of reference levels > 0
 
 enum ftype {
   REGULAR,
@@ -42,6 +41,7 @@ typedef struct dinode_t {
   time_t tinode;
   nlinks_t nlinks;
   fsize_t fsize;
+  block_t blockrefs[NBLOCKREFS];
 } dinode_t;
 
 /// @brief in core inode
@@ -50,7 +50,7 @@ typedef struct iinode_t
   dinode_t dinode;
   byte_t locked : 1;
   byte_t modified : 1;
-  ldev_t dev;
+  fsnum_t fs;
   ninode_t inum;
   nref_t nref;
   struct iinode_t *hprev;
