@@ -263,6 +263,37 @@ bhead_t *bread(ldev_t dev, block_t block)
 }
 
 
+
+/**
+ * @brief reads bl1 and pre loads bl2
+ * 
+ * @param dev 
+ * @param bl1 
+ * @param bl2 
+ * @return bhead_t*   buffer for bl1
+ */
+bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2)
+{
+  bhead_t *b1, *b2;
+
+  b1 = getblk(dev, bl1);
+  if (!b1->valid)
+    sync_buffer_from_disk(b1);
+
+  b2 = getblk(dev, bl2);
+  if (!b2->valid)
+    sync_buffer_from_disk(b2);
+
+  while (!b1->valid)
+    waitfor(BLOCKREAD);
+
+  brelse(b2);  
+
+  return b1;
+}
+
+
+
 /**
  * @brief write block from buffer
  * 

@@ -66,6 +66,21 @@ void add_buf_to_freelist(bhead_t *b, int asFirst);
  */
 bhead_t *bread(ldev_t dev, block_t block);
 
+/**
+ * @brief reads bl1 and pre loads bl2
+ * 
+ * @param dev 
+ * @param bl1 
+ * @param bl2 
+ * @return bhead_t*   buffer for bl1
+ */
+bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2);
+
+/**
+ * @brief writes buffer to disk
+ * 
+ * @param b 
+ */
 void bwrite(bhead_t *b);
 
 /**
