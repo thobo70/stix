@@ -264,7 +264,7 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
   bm.offblock = pos % BLOCKSIZE;
   bm.nbytesleft = BLOCKSIZE - bm.offblock;
   bm.rdablock = 0;
-  /// TODO add algorithm in bmap
+  /// @todo add algorithm in bmap
   return bm;
 }
 

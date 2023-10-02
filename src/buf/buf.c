@@ -287,7 +287,7 @@ bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2)
   while (!b1->valid)
     waitfor(BLOCKREAD);
 
-  brelse(b2);   /// BUG potential race condition
+  brelse(b2);   /// @bug potential race condition
 
   return b1;
 }
