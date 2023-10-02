@@ -133,22 +133,22 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
  * repeat
  *   if (block in hash queue) then (yes)
  *     if (buffer is busy) then (yes)
- *       : sleep(event buffer becomes free);
+ *       : sleep(event\nbuffer becomes free);
  *     else (no)
- *       : mark buffer as busy;
- *       : remove buffer from free list;
+ *       : mark buffer\nas busy;
+ *       : remove buffer\nfrom free list;
  *       : return buffer;
  *     stop
  *     endif
  *   else (no)
  *     if (freelist empty) then (yes)
- *       : sleep(event any buffer gets free);
+ *       : sleep(event\nany buffer\ngets free);
  *     else (no)
- *       : remove buffer from free list;
- *       if (buffer marked for delayed write) then (yes)
+ *       : remove buffer\nfrom free list;
+ *       if (buffer marked for\ndelayed write) then (yes)
  *         : async write buffer;
  *       else (no)
- *         : move buffer from old to new hash queue;
+ *         : move buffer\nfrom old to\nnew hash queue;
  *         : return buffer;
  *         stop
  *       endif
@@ -195,7 +195,11 @@ bhead_t *getblk(ldev_t dev, block_t block)
 }
 
 
-
+/**
+ * @brief release buffer
+ * 
+ * @param b 
+ */
 void brelse(bhead_t *b)
 {
   add_buf_to_freelist(b, !b->valid);
@@ -237,7 +241,13 @@ void sync_buffer_from_disk(bhead_t *b)
 }
 
 
-
+/**
+ * @brief read block into a buffer
+ * 
+ * @param dev 
+ * @param block 
+ * @return bhead_t* 
+ */
 bhead_t *bread(ldev_t dev, block_t block)
 {
   bhead_t *b = getblk(dev, block);
@@ -253,7 +263,11 @@ bhead_t *bread(ldev_t dev, block_t block)
 }
 
 
-
+/**
+ * @brief write block from buffer
+ * 
+ * @param b 
+ */
 void bwrite(bhead_t *b)
 {
   b->written = false;
