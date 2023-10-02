@@ -9,6 +9,8 @@
  * 
  */
 
+#include <stdio.h>
+
 #include "inode.h"
 #include "buf.h"
 
@@ -23,6 +25,9 @@ int main(int argc, char *argv[])
 {
   init_buffers();
   init_inodes();
+  
+  printf(" %ld %ld %ld %ld\n", sizeof(char), sizeof(short), sizeof(int), sizeof(ftype_t));
+  printf("dinode: %ld\n", sizeof(dinode_t));
   
   return 0;
 }

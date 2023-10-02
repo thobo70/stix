@@ -18,8 +18,8 @@
 
 #define NINODES 50          ///< number of inodes in system
 
-#define NBLOCKREFS 12       ///< number of block references in inode
-#define STARTREFSLEVEL 10   ///< index of start of reference levels > 0
+#define NBLOCKREFS 20       ///< number of block references in inode
+#define STARTREFSLEVEL 18   ///< index of start of reference levels > 0
 
 enum ftype {
   REGULAR,
@@ -29,13 +29,13 @@ enum ftype {
   FIFO
 };
 
-typedef enum ftype ftype_t;
+typedef word_t ftype_t;
 
 /// @brief inode stored on disk
 typedef struct dinode_t {
+  ftype_t ftype;
   owner_t owner;
   group_t group;
-  ftype_t ftype;
   fmode_t fmode;
   time_t tmod;
   time_t tinode;
@@ -61,6 +61,15 @@ typedef struct iinode_t
 
 
 
+typedef struct bmap_t {
+  block_t fsblock;
+  fsize_t offblock;
+  fsize_t nbytesleft;
+  block_t rdablock;
+} bmap_t;
+
+
+
 /**
  * @brief init inodes 
  * 
@@ -68,13 +77,13 @@ typedef struct iinode_t
 void init_inodes(void);
 
 /**
- * @brief find inode in hash or setup a new one
+ * @brief searches inode in hashlist or sets up a new one
  * 
- * @param dev         device of filesystem containing the inode
- * @param inum        number of inode
- * @return iinode_t*  pointer to inode or NULL of free in core inodes available
+ * @param fs 
+ * @param inum 
+ * @return iinode_t* inode or NULL if not found and no free inode left
  */
-iinode_t *iget(ldev_t dev, ninode_t inum);
+iinode_t *iget(fsnum_t fs, ninode_t inum);
 
 /**
  * @brief release access to in core inode

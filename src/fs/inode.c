@@ -23,7 +23,7 @@
 #define HTABVALUE(fs, inum) ((inum) & HTABMASK)
 #define HTAB(fs, inum) ihashtab[HTABVALUE(dev, inum)]
 
-#define NINODESBLOCK  (BLOCKSIZE / sizeof(dinode_t))
+#define NINODESBLOCK  ((block_t)( BLOCKSIZE / sizeof(dinode_t) ))
 #define INODEBLOCK(fs, inum) (((inum - 1) / NINODESBLOCK) + SUPERBLOCKINODE(fs))
 #define INODEOFFSET(inum) (((inum - 1) % NINODESBLOCK) * sizeof(dinode_t))
 
@@ -248,9 +248,24 @@ void iput(iinode_t *inode)
   wakeall(INODELOCKED);
 }
 
-void bmap(void)
-{
 
+
+/**
+ * @brief mapping from file position to block in fs
+ * 
+ * @param inode 
+ * @param pos 
+ * @return bmap_t 
+ */
+bmap_t bmap(iinode_t *inode, fsize_t pos)
+{
+  bmap_t bm;
+  block_t lblock = pos / BLOCKSIZE;
+  bm.offblock = pos % BLOCKSIZE;
+  bm.nbytesleft = BLOCKSIZE - bm.offblock;
+  bm.rdablock = 0;
+  /// TODO add algorithm in bmap
+  return bm;
 }
 
 void ialloc(void)

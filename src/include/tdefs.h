@@ -14,7 +14,7 @@
 
 typedef unsigned char byte_t;
 typedef unsigned short word_t;
-typedef unsigned long dword_t;
+typedef unsigned int dword_t;
 
 #define true (1==1)
 #define false (!true)
@@ -23,13 +23,13 @@ typedef unsigned long dword_t;
 #define NULL ((void*)0)
 #endif
 
-typedef byte_t ldev_t;      ///< logical device
-typedef dword_t block_t;    ///< block number on disk (sector)
+typedef word_t ldev_t;      ///< logical device
+typedef word_t block_t;     ///< block number on disk (sector)
 typedef word_t ninode_t;    ///< index of inode in filesystem
 typedef byte_t nref_t;      ///< number of (file) references to the inode
 
-typedef byte_t owner_t;
-typedef byte_t group_t;
+typedef word_t owner_t;
+typedef word_t group_t;
 typedef word_t fmode_t;     ///< file mode (e.g. rwx)
 typedef dword_t time_t;     ///< system time
 typedef word_t nlinks_t;    ///< number of links (directory entries) to the inode
