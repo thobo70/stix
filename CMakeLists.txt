@@ -7,6 +7,8 @@ project(
   LANGUAGES C 
 )
 
+add_subdirectory(cunit/CUnit)
+
 find_package(Java 8 COMPONENTS Runtime)
 
 include(CTest)
@@ -32,9 +34,31 @@ target_include_directories(
   PUBLIC src/include
 )
 
+add_executable(
+  tests1
+#  src/pc/pc.c
+#  src/buf/buf.c
+#  src/fs/fs.c
+#  src/fs/inode.c
+#  src/fs/blocks.c
+  tests/tests1.c
+)
+
+target_include_directories(
+  tests1
+  PUBLIC src/include
+)
+
+target_link_libraries(tests1 PRIVATE cunit)
+
 add_test(
   NAME mockup_test
   COMMAND mockup
+)
+
+add_test(
+  NAME tests1
+  COMMAND tests1
 )
 
 set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
