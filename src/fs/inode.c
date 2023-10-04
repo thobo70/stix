@@ -264,7 +264,38 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
   bm.offblock = pos % BLOCKSIZE;
   bm.nbytesleft = BLOCKSIZE - bm.offblock;
   bm.rdablock = 0;
-  /// @todo add algorithm in bmap
+
+  if (lblock < STARTREFSLEVEL) {
+    bm.fsblock = inode->dinode.blockrefs[lblock];
+    bm.rdablock = inode->dinode.blockrefs[lblock + 1];
+    return bm;
+  }
+
+  lblock -= STARTREFSLEVEL;
+  dword_t d = 1;
+  int l;
+  for ( l = 0 ; l < 5; ++l ) {
+    if (lblock < NREFSPERBLOCK) {
+      break;
+    }
+    d *= NREFSPERBLOCK;
+    lblock -= d;
+  }
+
+  block_t b = inode->dinode.blockrefs[STARTREFSLEVEL + l];
+  do {
+    bhead_t *bh = bread(LDEVFROMFS(inode->fs), b);
+    block_t *refs = (block_t *)bh->buf->mem;
+    int idx = lblock / d;
+    b = refs[idx++];
+    brelse(bh);
+    if (idx < NREFSPERBLOCK)
+      bm.rdablock = refs[idx];
+    lblock %= d;
+    d /= NREFSPERBLOCK;
+  } while (d > 0);
+  
+  bm.fsblock = b;
   return bm;
 }
 
