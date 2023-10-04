@@ -37,8 +37,8 @@ typedef struct dinode_t {
   owner_t owner;
   group_t group;
   fmode_t fmode;
-  time_t tmod;
-  time_t tinode;
+  utime_t tmod;
+  utime_t tinode;
   nlinks_t nlinks;
   fsize_t fsize;
   block_t blockrefs[NBLOCKREFS];

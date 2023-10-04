@@ -31,7 +31,7 @@ typedef byte_t nref_t;      ///< number of (file) references to the inode
 typedef word_t owner_t;
 typedef word_t group_t;
 typedef word_t fmode_t;     ///< file mode (e.g. rwx)
-typedef dword_t time_t;     ///< system time
+typedef dword_t utime_t;     ///< system time
 typedef word_t nlinks_t;    ///< number of links (directory entries) to the inode
 typedef dword_t fsize_t;    ///< size of file
 typedef byte_t fsnum_t;     ///< index of filesystem
