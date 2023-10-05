@@ -36,11 +36,11 @@ target_include_directories(
 
 add_executable(
   tests1
-#  src/pc/pc.c
-#  src/buf/buf.c
-#  src/fs/fs.c
-#  src/fs/inode.c
-#  src/fs/blocks.c
+  src/pc/pc.c
+  src/buf/buf.c
+  src/fs/fs.c
+  src/fs/inode.c
+  src/fs/blocks.c
   tests/tests1.c
 )
 
@@ -61,6 +61,7 @@ add_test(
   COMMAND tests1
 )
 
+set(DOXYGEN_EXCLUDE_PATTERNS */os/cunit/* */os/tests/*)
 set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
 set(DOXYGEN_GENERATE_HTML YES)
 set(DOXYGEN_GENERATE_MAN YES)
@@ -69,6 +70,7 @@ set(DOXYGEN_CALL_GRAPH YES)
 set(DOXYGEN_CALLER_GRAPH YES)
 set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
 set(DOXYGEN_PLANTUML_JAR_PATH "${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar")
+set(DOXYGEN_WARN_LOGFILE "DoxygenWarningLog.txt")
 
 doxygen_add_docs(
   docs
