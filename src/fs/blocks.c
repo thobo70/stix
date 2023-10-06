@@ -11,6 +11,7 @@
 
 #include "blocks.h"
 #include "fs.h"
+#include "utils.h"
 
 
 isuperblock_t isblock[MAXFS];
@@ -18,6 +19,8 @@ isuperblock_t isblock[MAXFS];
 
 void freeblock(fsnum_t fs, block_t  bl)
 {
+  ASSERT(fs < MAXFS);
+  ASSERT(bl > 0);
   /// TODO set bit for block bl in bitfield of fs to 0
 }
 

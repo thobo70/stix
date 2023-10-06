@@ -7,6 +7,8 @@ project(
   LANGUAGES C 
 )
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -pedantic-errors")
+
 add_subdirectory(cunit/CUnit)
 
 find_package(Java 8 COMPONENTS Runtime)
@@ -27,6 +29,7 @@ add_executable(
   src/fs/fs.c
   src/fs/inode.c
   src/fs/blocks.c
+  src/util/utils.c
 )
 
 target_include_directories(
@@ -41,6 +44,7 @@ add_executable(
   src/fs/fs.c
   src/fs/inode.c
   src/fs/blocks.c
+  src/util/utils.c
   tests/tests1.c
 )
 

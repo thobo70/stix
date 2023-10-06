@@ -10,16 +10,17 @@
  */
 
 #include "pc.h"
+#include "utils.h"
 
 process_t *waitforq[NQUEUES];
 
 void waitfor(waitfor_t w)
 {
-
+  ASSERT(w < NQUEUES);
 }
 
 
 void wakeall(waitfor_t w)
 {
-  
+  ASSERT(w < NQUEUES);
 }

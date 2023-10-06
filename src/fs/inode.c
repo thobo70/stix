@@ -27,7 +27,7 @@
 #define INODEBLOCK(fs, inum) (((inum - 1) / NINODESBLOCK) + SUPERBLOCKINODE(fs))
 #define INODEOFFSET(inum) (((inum - 1) % NINODESBLOCK) * sizeof(dinode_t))
 
-#define NREFSPERBLOCK (BLOCKSIZE / sizeof(block_t))
+#define NREFSPERBLOCK ((block_t)(BLOCKSIZE / sizeof(block_t)))
 
 iinode_t iinode[NINODES];
 
@@ -164,7 +164,7 @@ void move_inode_to_hashqueue(iinode_t *inode, fsnum_t fs, ninode_t inum)
 
 void ifree(iinode_t *inode)
 {
-
+  ASSERT(inode);
 }
 
 
@@ -175,8 +175,8 @@ void ifree(iinode_t *inode)
  */
 void init_inodes(void)
 {
-  memset(iinode, 0, sizeof(iinode));
-  memset(ihashtab, 0, sizeof(ihashtab));
+  mset(iinode, 0, sizeof(iinode));
+  mset(ihashtab, 0, sizeof(ihashtab));
 
   for ( int i ; i < NBUFFER ; ++i ) 
     add_inode_to_freelist(&iinode[i], 0);

@@ -84,8 +84,8 @@ void add_buf_to_freelist(bhead_t *b, int asFirst)
 
 void init_buffers(void)
 {
-  memset(bufhead, 0, sizeof(bufhead));
-  memset(hashtab, 0, sizeof(hashtab));
+  mset(bufhead, 0, sizeof(bufhead));
+  mset(hashtab, 0, sizeof(hashtab));
 
   for ( int i ; i < NBUFFER ; ++i ) 
     add_buf_to_freelist(&bufhead[i], false);
@@ -237,7 +237,7 @@ void sync_buffer_to_disk(bhead_t *b)
  */
 void sync_buffer_from_disk(bhead_t *b)
 {
-
+  ASSERT(b);
 }
 
 

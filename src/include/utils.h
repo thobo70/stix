@@ -12,8 +12,17 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include <string.h>
+#include "tdefs.h"
 
-#define mcpy(dst, src, n) memcpy(dst, src, n)
+#ifndef NDEBUG
+#define ASSERT(a) if (!(a)) panic(#a " is 0/false in %s[Ln %d]\n", __FILE__, __LINE__)
+#else
+#define ASSERT(s)
+#endif
+
+void mcpy(void *dst, void *src, sizem_t n);
+void mset(void *s, int c, sizem_t n);
+
+void panic(const char *t, ...);
 
 #endif

@@ -46,4 +46,4 @@ CUNIT_CI_RUN("my-suite",
              CUNIT_CI_TEST(test_wordsize_pass),
              CUNIT_CI_TEST(test_dwordsize_pass),
              CUNIT_CI_TEST(test_dinodesize_pass)
-             );
+             )
