@@ -178,7 +178,7 @@ void init_inodes(void)
   mset(iinode, 0, sizeof(iinode));
   mset(ihashtab, 0, sizeof(ihashtab));
 
-  for ( int i ; i < NBUFFER ; ++i ) 
+  for ( int i = 0 ; i < NBUFFER ; ++i ) 
     add_inode_to_freelist(&iinode[i], 0);
 }
 

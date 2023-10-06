@@ -7,7 +7,7 @@ project(
   LANGUAGES C 
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Werror -pedantic-errors")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -pedantic-errors")
 
 add_subdirectory(cunit/CUnit)
 
@@ -32,6 +32,8 @@ add_executable(
   src/util/utils.c
 )
 
+set_target_properties( mockup PROPERTIES COMPILE_FLAGS "-Wextra" )
+
 target_include_directories(
   mockup
   PUBLIC src/include
@@ -47,6 +49,8 @@ add_executable(
   src/util/utils.c
   tests/tests1.c
 )
+
+set_target_properties( tests1 PROPERTIES COMPILE_FLAGS "-Wextra" )
 
 target_include_directories(
   tests1

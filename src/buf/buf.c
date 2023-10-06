@@ -87,7 +87,7 @@ void init_buffers(void)
   mset(bufhead, 0, sizeof(bufhead));
   mset(hashtab, 0, sizeof(hashtab));
 
-  for ( int i ; i < NBUFFER ; ++i ) 
+  for ( int i = 0 ; i < NBUFFER ; ++i ) 
     add_buf_to_freelist(&bufhead[i], false);
 }
 
