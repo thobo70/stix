@@ -313,9 +313,10 @@ void ialloc(void)
  */
 iinode_t *namei(const char *p)
 {
-  iinode_t *wi = NULL;  // working inode
-  dword_t i, n;         // index and number of directory entries 
-  int ps;               // size of current path name part
+  iinode_t *wi = NULL;    // working inode
+  iinode_t *root = NULL;  // root inode
+  dword_t i, n;           // index and number of directory entries 
+  int ps;                 // size of current path name part
   bmap_t bm;
   bhead_t *bh;
   dirent_t *de;
@@ -323,8 +324,9 @@ iinode_t *namei(const char *p)
   int found;
 
   ASSERT(p);
+  root = iget(active->u->fsroot->fs, active->u->fsroot->inum);
   if (*p == '/') {
-    wi = iget(active->u->fsroot->fs, active->u->fsroot->inum);
+    wi = root;
     ++p;
   } else
     wi = iget(active->u->workdir->fs, active->u->workdir->inum);
@@ -337,31 +339,35 @@ iinode_t *namei(const char *p)
       /// @todo path name too long error
       return NULL;
     }
-
-    if (wi->dinode.ftype != DIRECTORY) {
-      /// @todo set error no dir
-      return NULL;
-    }
-    /// @todo check permission
-    n = wi->dinode.fsize / sizeof(dirent_t);
-    fs = wi->fs;
-    found = false;
-    for ( i = 0 ; !found && i < n ; ++i ) {
-      /// @todo optimize algorithm, is quick and dirty
-      bm = bmap(wi, i * sizeof(dirent_t));
-      bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
-      de = (dirent_t*)&bh->buf->mem[bm.offblock];
-      if (sncmp(p, de->name, ps) == 0) {
-        iput(wi);
-        wi = iget(fs, de->inum);
-        found = true;
+    if ((sncmp(p, "..", n) != 0) || (wi != root)) {  // if *p is ".." and wi is root then continue
+      if (wi->dinode.ftype != DIRECTORY) {
+        /// @todo set error no dir
+        return NULL;
       }
-      brelse(bh);
+      /// @todo check permission
+      n = wi->dinode.fsize / sizeof(dirent_t);
+      fs = wi->fs;
+      found = false;
+      for ( i = 0 ; !found && i < n ; ++i ) {
+        /// @todo optimize algorithm, is quick and dirty
+        bm = bmap(wi, i * sizeof(dirent_t));
+        bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
+        de = (dirent_t*)&bh->buf->mem[bm.offblock];
+        if (sncmp(p, de->name, ps) == 0) {
+          iput(wi);
+          wi = iget(fs, de->inum);
+          found = true;
+        }
+        brelse(bh);
+      }
+      if (!found) {
+        /// @todo error entry not found
+        return NULL;
+      }
     }
-    if (!found) {
-      /// @todo error entry not found
-      return NULL;
-    }
+    p += ps;
+    if (*p == '/')
+      ++p;
   }
   
   return wi;
