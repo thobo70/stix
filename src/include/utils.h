@@ -23,6 +23,8 @@
 void mcpy(void *dst, void *src, sizem_t n);
 void mset(void *s, int c, sizem_t n);
 
+int sncmp(const char *s1, const char *s2, sizem_t n);
+
 void panic(const char *t, ...);
 
 #endif

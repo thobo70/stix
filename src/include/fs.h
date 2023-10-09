@@ -12,9 +12,16 @@
 #ifndef _FS_H
 #define _FS_H
 
+#include "tdefs.h"
 #include "inode.h"
 
 #define MAXFS 6
+#define DIRNAMEENTRY 14
+
+typedef struct dirent_t {
+  ninode_t inum;
+  char name[DIRNAMEENTRY];
+} dirent_t;
 
 /// @brief file
 typedef struct fsfile_t {

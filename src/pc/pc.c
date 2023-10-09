@@ -12,7 +12,13 @@
 #include "pc.h"
 #include "utils.h"
 
+
+
 process_t *waitforq[NQUEUES];
+
+process_t *active = NULL;
+
+
 
 void waitfor(waitfor_t w)
 {

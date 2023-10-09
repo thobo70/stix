@@ -11,6 +11,7 @@
 #include "inode.h"
 #include "buf.h"
 #include "pc.h"
+#include "fs.h"
 #include "utils.h"
 
 #define SUPERBLOCKINODE(fs)  0   /// TODO: replace with real first inode block from dev
@@ -304,7 +305,57 @@ void ialloc(void)
 
 }
 
-void namei(void)
+iinode_t *namei(const char *p)
 {
+  iinode_t *wi = NULL;  ///< working inode
+  dword_t i, n;         ///< index and number of directory entries 
+  int ps;               ///< size of current path name part
+  bmap_t bm;
+  bhead_t *bh;
+  dirent_t *de;
+  fsnum_t fs;
+  int found;
 
+  ASSERT(p);
+  if (*p == '/') {
+    wi = iget(active->u->fsroot->fs, active->u->fsroot->inum);
+    ++p;
+  } else
+    wi = iget(active->u->workdir->fs, active->u->workdir->inum);
+  if (!wi)
+    return NULL;
+
+  while (*p)  {
+    for ( ps = 0 ; p[ps] && (p[ps] != '/') ; ++ps );
+    if (ps > DIRNAMEENTRY) {
+      /// @todo path name too long error
+      return NULL;
+    }
+
+    if (wi->dinode.ftype != DIRECTORY) {
+      /// @todo set error no dir
+      return NULL;
+    }
+    /// @todo check permission
+    n = wi->dinode.fsize / sizeof(dirent_t);
+    fs = wi->fs;
+    found = false;
+    for ( i = 0 ; !found && i < n ; ++i ) {
+      bm = bmap(wi, i * sizeof(dirent_t));
+      bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
+      de = (dirent_t*)&bh->buf->mem[bm.offblock];
+      if (sncmp(p, de->name, ps) == 0) {
+        iput(wi);
+        wi = iget(fs, de->inum);
+        found = true;
+      }
+      brelse(bh);
+    }
+    if (!found) {
+      /// @todo error entry not found
+      return NULL;
+    }
+  }
+  
+  return wi;
 }

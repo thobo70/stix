@@ -16,6 +16,11 @@ void mset(void *s, int c, sizem_t n)
   memset(s, c, n);
 }
 
+int sncmp(const char *s1, const char *s2, sizem_t n)
+{
+  return strncmp(s1, s2, n);
+}
+
 void panic(const char *t, ...)
 {
   va_list args;

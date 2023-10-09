@@ -12,6 +12,7 @@
 #define _PC_H
 
 #include "tdefs.h"
+#include "inode.h"
 
 enum waitfor {
   RUNHIGH,
@@ -29,12 +30,23 @@ enum waitfor {
 
 typedef enum waitfor waitfor_t;
 
+
+
+typedef struct userspace_t {
+  iinode_t *fsroot;
+  iinode_t *workdir;
+} u_t;
+
+
 typedef struct process_t {
   int pid;
   byte_t isswapped : 1;
   waitfor_t iswaitingfor;
   struct process_t *queue;
+  u_t *u;
 } process_t;
+
+extern process_t *active;
 
 /**
  * @brief waitfor puts process to sleep till reason is no longer valid
