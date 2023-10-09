@@ -305,11 +305,17 @@ void ialloc(void)
 
 }
 
+/**
+ * @brief finds inode which path points to
+ * 
+ * @param p           file path
+ * @return iinode_t*  inode
+ */
 iinode_t *namei(const char *p)
 {
-  iinode_t *wi = NULL;  ///< working inode
-  dword_t i, n;         ///< index and number of directory entries 
-  int ps;               ///< size of current path name part
+  iinode_t *wi = NULL;  // working inode
+  dword_t i, n;         // index and number of directory entries 
+  int ps;               // size of current path name part
   bmap_t bm;
   bhead_t *bh;
   dirent_t *de;
@@ -341,6 +347,7 @@ iinode_t *namei(const char *p)
     fs = wi->fs;
     found = false;
     for ( i = 0 ; !found && i < n ; ++i ) {
+      /// @todo optimize algorithm, is quick and dirty
       bm = bmap(wi, i * sizeof(dirent_t));
       bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
       de = (dirent_t*)&bh->buf->mem[bm.offblock];

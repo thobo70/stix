@@ -92,4 +92,6 @@ iinode_t *iget(fsnum_t fs, ninode_t inum);
  */
 void iput(iinode_t *inode);
 
+iinode_t *namei(const char *p);
+
 #endif
