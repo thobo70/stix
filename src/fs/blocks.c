@@ -17,6 +17,13 @@
 isuperblock_t isblock[MAXFS];
 
 
+isuperblock_t *getisblock(fsnum_t fs)
+{
+  ASSERT(fs < MAXFS);
+  return &isblock[fs];
+}
+
+
 void freeblock(fsnum_t fs, block_t  bl)
 {
   ASSERT(fs < MAXFS);

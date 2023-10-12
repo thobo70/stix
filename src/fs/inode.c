@@ -15,7 +15,7 @@
 #include "utils.h"
 
 #define SUPERBLOCKINODE(fs)  0   /// TODO: replace with real first inode block from dev
-#define LDEVFROMFS(fs)  0        /// TODO: ldev to fs converting
+#define LDEVFROMFS(fs)  0        /// TODO: fs to ldev converting
 
 #define HTABSIZEBITS 4
 
@@ -60,12 +60,13 @@ void free_all_blocks(iinode_t *inode)
 {
   int level = 0;
 
+  ASSERT(inode);
   for ( int i = 0 ; i < NBLOCKREFS ; ++i ) {
     block_t bl = inode->dinode.blockrefs[i];
-    if (bl == 0)
-      break;
     if (i >= STARTREFSLEVEL)
       ++level;
+    if (bl == 0)
+      continue;
     freeblocklevel(level, inode->fs, bl);
   }
 }
@@ -78,6 +79,7 @@ void free_all_blocks(iinode_t *inode)
  */
 void update_inode_on_disk(iinode_t *inode)
 {
+  ASSERT(inode);
   bhead_t *b = bread(LDEVFROMFS(inode->fs), INODEBLOCK(inode->fs, inode->inum));
   mcpy(&b->buf->mem[INODEOFFSET(inode->inum)], &inode->dinode, sizeof(dinode_t));
   b->dwrite = true;
@@ -93,6 +95,7 @@ void update_inode_on_disk(iinode_t *inode)
  */
 void remove_inode_from_freelist(iinode_t *inode)
 {
+  ASSERT(inode);
   if (!inode->fnext)
     return;
   if (inode->fnext == inode) {
@@ -116,6 +119,7 @@ void remove_inode_from_freelist(iinode_t *inode)
  */
 void add_inode_to_freelist(iinode_t *inode, int asFirst)
 {
+  ASSERT(inode);
   if (ifreelist) {
     inode->fprev = ifreelist->fprev;
     inode->fnext = ifreelist;
@@ -140,6 +144,9 @@ void add_inode_to_freelist(iinode_t *inode, int asFirst)
  */
 void move_inode_to_hashqueue(iinode_t *inode, fsnum_t fs, ninode_t inum)
 {
+  ASSERT(inode);
+  ASSERT(fs < MAXFS);
+  ASSERT(inum < getisblock(fs)->dsblock.ninodes);
   iinode_t *p = HTAB(fs, inum);
   if (inode->hnext) {
     if (inode->hnext == inode)
@@ -196,6 +203,8 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
   iinode_t *found = NULL;
   bhead_t *bhead = NULL;
 
+  ASSERT(fs < MAXFS);
+  ASSERT(inum < getisblock(fs)->dsblock.ninodes);
   for(;;) {
     for ( found = HTAB(fs, inum) ; found ; found = found->hnext )
       if ((found->fs == fs) && (found->inum == inum))
@@ -234,6 +243,7 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
  */
 void iput(iinode_t *inode)
 {
+  ASSERT(inode);
   inode->locked = true;
   inode->nref--;
   if (inode->nref == 0) {
@@ -260,6 +270,7 @@ void iput(iinode_t *inode)
  */
 bmap_t bmap(iinode_t *inode, fsize_t pos)
 {
+  ASSERT(inode);
   bmap_t bm;
   block_t lblock = pos / BLOCKSIZE;
   bm.offblock = pos % BLOCKSIZE;

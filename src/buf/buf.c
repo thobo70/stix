@@ -44,6 +44,7 @@ void sync_buffer_from_disk(bhead_t *b);
  */
 void remove_buf_from_freelist(bhead_t *b)
 {
+  ASSERT(b);
   if (!b->infreelist)
     return;
 
@@ -63,6 +64,7 @@ void remove_buf_from_freelist(bhead_t *b)
 
 void add_buf_to_freelist(bhead_t *b, int asFirst)
 {
+  ASSERT(b);
   if (b->infreelist)
     return;
   if (freelist) {
@@ -103,6 +105,7 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
 {
   bhead_t *p = HTAB(dev, block);
 
+  ASSERT(b);
   b->valid = false;
   if (b->hnext) {
     if (b->hnext == b)
@@ -202,6 +205,7 @@ bhead_t *getblk(ldev_t dev, block_t block)
  */
 void brelse(bhead_t *b)
 {
+  ASSERT(b);
   add_buf_to_freelist(b, !b->valid);
   b->busy = false;
   wakeall(BLOCKBUSY);
@@ -213,6 +217,7 @@ bhead_t *writequeue = NULL;
 
 void buffer_synced(bhead_t *b, int err)
 {
+  ASSERT(b);
   b->dwrite = false;
   b->valid = (err == 0);
   add_buf_to_freelist(b, !b->valid);
@@ -225,6 +230,7 @@ void buffer_synced(bhead_t *b, int err)
  */
 void sync_buffer_to_disk(bhead_t *b)
 {
+  ASSERT(b);
   if (writequeue)
     writequeue->fprev = b;
   writequeue = b;
@@ -301,6 +307,7 @@ bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2)
  */
 void bwrite(bhead_t *b)
 {
+  ASSERT(b);
   b->written = false;
   if (!b->dwrite) {
     sync_buffer_to_disk(b);
