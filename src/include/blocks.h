@@ -14,17 +14,14 @@
 
 #include "tdefs.h"
 
-#define NFREEINODES 10
-#define NFREEBLOCKS 10
+#define NFREEINODES 50
+#define NFREEBLOCKS 50
 
 typedef struct superblock {
     word_t type;
     word_t version;
-    word_t locked : 1;
-    word_t modified : 1;
     word_t notclean : 1;
     block_t inodes;
-    block_t ibitmap;
     block_t bbitmap;
     block_t firstblock;
     word_t ninodes;
@@ -33,11 +30,14 @@ typedef struct superblock {
 
 typedef struct isuperblock {
     superblock_t dsblock;
+    word_t locked : 1;
+    word_t modified : 1;
     ldev_t dev;
     word_t nfinodes;
-    word_t finode[NFREEINODES];
+    ninode_t finode[NFREEINODES];
+    ninode_t lastfinode;
     word_t nfblocks;
-    word_t fblocks[NFREEBLOCKS];
+    block_t fblocks[NFREEBLOCKS];
 } isuperblock_t;
 
 isuperblock_t *getisblock(fsnum_t fs);

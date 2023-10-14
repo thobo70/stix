@@ -22,6 +22,8 @@
 #define STARTREFSLEVEL 18   ///< index of start of reference levels > 0
 
 enum ftype {
+  IUNSPEC = 0,
+  IFREE,
   REGULAR,
   DIRECTORY,
   CHARACTER,

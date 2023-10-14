@@ -9,6 +9,7 @@
  * 
  */
 #include "inode.h"
+#include "blocks.h"
 #include "buf.h"
 #include "pc.h"
 #include "fs.h"
@@ -170,13 +171,6 @@ void move_inode_to_hashqueue(iinode_t *inode, fsnum_t fs, ninode_t inum)
 
 
 
-void ifree(iinode_t *inode)
-{
-  ASSERT(inode);
-}
-
-
-
 /**
  * @brief init inodes
  * 
@@ -189,6 +183,56 @@ void init_inodes(void)
   for ( int i = 0 ; i < NBUFFER ; ++i ) 
     add_inode_to_freelist(&iinode[i], 0);
 }
+
+
+
+iinode_t *ialloc(fsnum_t fs)
+{
+  iinode_t *ii = NULL;
+  ASSERT(fs < MAXFS);
+  isuperblock_t *isbk = getisblock(fs);
+  for(;;) {
+    if (isbk->locked) {
+      waitfor(SBLOCKBUSY);
+      continue;
+    }
+    isbk->locked = true;
+    if ((isbk->nfinodes >= NFREEINODES) || (isbk->finode[isbk->nfinodes] == 0)) {
+      /// @todo refill finodes 
+      /*
+      if (nofreeinode) {
+        isbk->locked = false;
+        wakeall(SBLOCKBUSY);
+        /// @todo set error
+        return NULL;
+      }
+      */
+      isbk->nfinodes = 0;
+    }
+    ii = iget(fs, isbk->finode[isbk->nfinodes]);
+    if (!ii)
+      return NULL;
+    isbk->lastfinode = isbk->finode[isbk->nfinodes++];
+    isbk->locked = false;
+    wakeall(SBLOCKBUSY);
+    if ((ii->nref > 1) || (ii->dinode.nlinks > 0)) {
+      update_inode_on_disk(ii);
+      iput(ii);
+      continue;
+    }
+    mset(&ii->dinode, 0, sizeof(dinode_t));
+    update_inode_on_disk(ii);
+    return ii;
+  }
+}
+
+
+
+void ifree(iinode_t *inode)
+{
+  ASSERT(inode);
+}
+
 
 
 /**
@@ -311,10 +355,7 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
   return bm;
 }
 
-void ialloc(void)
-{
 
-}
 
 /**
  * @brief finds inode which path points to
