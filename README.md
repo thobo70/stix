@@ -1,4 +1,7 @@
 # A small UNIX OS
+
+![stix (super tiny IX)](stix_logo.png)
+
 ## Aim of the project
 An Unix like system for small 8 and 16-Bit Computers, which should spend as little as possible ram during execution. In addition, the whole suite should be able build itself on the small Computer.
 
