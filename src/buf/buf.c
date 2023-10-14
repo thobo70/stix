@@ -7,12 +7,6 @@
  * 
  * @copyright Copyright (c) 2023
  * 
- * @startuml
- * Alice -> Bob: test
- * Bob -> Bob: thinks
- * Bob -> Nena: really
- * Nena -> Alice: no
- * @enduml
  */
 
 #include "utils.h"
