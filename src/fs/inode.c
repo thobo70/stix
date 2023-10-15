@@ -38,6 +38,13 @@ iinode_t *ifreelist = NULL;
 
 
 
+/**
+ * @brief recursively iterates over the levels of indirection of block references
+ * 
+ * @param level current level
+ * @param fs    working fs
+ * @param bl    referenced block
+ */
 void freeblocklevel(int level, fsnum_t fs, block_t bl)
 {
   if (level) {
@@ -55,7 +62,7 @@ void freeblocklevel(int level, fsnum_t fs, block_t bl)
 /**
  * @brief free all blocks assigned to this inode
  * 
- * @param inode 
+ * @param inode the inode with block references
  */
 void free_all_blocks(iinode_t *inode)
 {
@@ -73,10 +80,11 @@ void free_all_blocks(iinode_t *inode)
 }
 
 
+
 /**
  * @brief write inode to disk
  * 
- * @param inode 
+ * @param inode the inode to write
  */
 void update_inode_on_disk(iinode_t *inode)
 {
@@ -88,6 +96,8 @@ void update_inode_on_disk(iinode_t *inode)
   brelse(b);
   inode->modified = false;
 }
+
+
 
 /**
  * @brief remove inode from free list
@@ -112,6 +122,7 @@ void remove_inode_from_freelist(iinode_t *inode)
 }
 
 
+
 /**
  * @brief add indoe to free list
  * 
@@ -134,6 +145,7 @@ void add_inode_to_freelist(iinode_t *inode, int asFirst)
     inode->fprev = inode;
   }
 }
+
 
 
 /**
