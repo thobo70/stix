@@ -15,8 +15,8 @@
 #include "fs.h"
 #include "utils.h"
 
-#define SUPERBLOCKINODE(fs)  0   /// TODO: replace with real first inode block from dev
-#define LDEVFROMFS(fs)  0        /// TODO: fs to ldev converting
+#define SUPERBLOCKINODE(fs)  (getisblock(fs)->dsblock.inodes)   ///< first block with inodes in fs
+#define LDEVFROMFS(fs)  (getisblock(fs)->dev)        ///< ldev of fs from super block
 
 #define HTABSIZEBITS 4
 
@@ -189,8 +189,15 @@ void init_inodes(void)
 iinode_t *ialloc(fsnum_t fs)
 {
   iinode_t *ii = NULL;
+  bhead_t *bhead = NULL;
+  dinode_t *dinode = NULL;
+
   ASSERT(fs < MAXFS);
+
   isuperblock_t *isbk = getisblock(fs);
+  block_t firstinodeblock = SUPERBLOCKINODE(fs);
+  block_t currblk = 0;
+
   for(;;) {
     if (isbk->locked) {
       waitfor(SBLOCKBUSY);
@@ -198,16 +205,31 @@ iinode_t *ialloc(fsnum_t fs)
     }
     isbk->locked = true;
     if ((isbk->nfinodes >= NFREEINODES) || (isbk->finode[isbk->nfinodes] == 0)) {
-      /// @todo refill finodes 
-      /*
-      if (nofreeinode) {
+      mset(&isbk->finode, 0, sizeof(isbk->finode));
+      ninode_t iidx = isbk->lastfinode;
+      int i = 0;
+      do {
+        if (++iidx >= isbk->dsblock.ninodes)
+          break;
+        if (!bhead || (currblk != INODEBLOCK(iidx, firstinodeblock))) {
+          currblk = INODEBLOCK(iidx, firstinodeblock);
+          if (bhead)
+            brelse(bhead);
+          bhead = breada(LDEVFROMFS(fs), currblk, currblk + 1);
+          dinode = (dinode_t*)bhead->buf->mem;
+        }
+        if (dinode[(iidx - 1) % NINODESBLOCK].ftype == IFREE)
+          isbk->finode[i++] = iidx;
+      } while (i < NFREEINODES);
+      if (bhead)
+        brelse(bhead);
+      isbk->nfinodes = 0;
+      if (isbk->finode[isbk->nfinodes] == 0) {
         isbk->locked = false;
         wakeall(SBLOCKBUSY);
-        /// @todo set error
+        /// @todo set error no free inodes in fs
         return NULL;
       }
-      */
-      isbk->nfinodes = 0;
     }
     ii = iget(fs, isbk->finode[isbk->nfinodes]);
     if (!ii)
@@ -215,12 +237,13 @@ iinode_t *ialloc(fsnum_t fs)
     isbk->lastfinode = isbk->finode[isbk->nfinodes++];
     isbk->locked = false;
     wakeall(SBLOCKBUSY);
-    if ((ii->nref > 1) || (ii->dinode.nlinks > 0)) {
+    if ((ii->dinode.ftype != IFREE) || (ii->nref > 1) || (ii->dinode.nlinks > 0)) {
       update_inode_on_disk(ii);
       iput(ii);
       continue;
     }
     mset(&ii->dinode, 0, sizeof(dinode_t));
+    ii->dinode.ftype = IUNSPEC;
     update_inode_on_disk(ii);
     return ii;
   }
@@ -270,7 +293,7 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
     }
     remove_inode_from_freelist(found);
     move_inode_to_hashqueue(found, fs, inum);
-    bhead = bread(LDEVFROMFS(inode->fs), INODEBLOCK(inum, SUPERBLOCKINODE(fs)));
+    bhead = bread(LDEVFROMFS(found->fs), INODEBLOCK(inum, SUPERBLOCKINODE(fs)));
     mcpy(&found->dinode, &bhead->buf->mem[INODEOFFSET(inum)], sizeof(dinode_t));
     brelse(bhead);
     found->nref = 1;
