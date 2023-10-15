@@ -186,6 +186,12 @@ void init_inodes(void)
 
 
 
+/**
+ * @brief allocates an inode from the fs
+ * 
+ * @param fs          the fs where to search for a free inode
+ * @return iinode_t*  points to free inode or NULL if an error is set
+ */
 iinode_t *ialloc(fsnum_t fs)
 {
   iinode_t *ii = NULL;
@@ -251,9 +257,45 @@ iinode_t *ialloc(fsnum_t fs)
 
 
 
+/**
+ * @brief frees an inode in fs
+ * 
+ * @param inode the inode to be freed
+ */
 void ifree(iinode_t *inode)
 {
   ASSERT(inode);
+  isuperblock_t *isbk = getisblock(inode->fs);
+
+  inode->dinode.ftype = IUNSPEC;
+
+  while (isbk->locked) {
+    waitfor(SBLOCKBUSY);
+  }
+  isbk->locked = true;
+
+  if (isbk->nfblocks >= NFREEINODES) {
+    isbk->nfblocks = NFREEBLOCKS - 1;
+    isbk->finode[isbk->nfinodes] = inode->inum;
+  } else if ((isbk->nfinodes == 0) || (isbk->finode[isbk->nfinodes] < inode->inum)) {
+    int d = 0, j = 0;
+    for ( int i = isbk->nfinodes + 1 ; i < NFREEINODES ; ++i ) {
+      if (isbk->finode[i] > (inode->inum + d)) {
+        j = i;
+        d = isbk->finode[i] - inode->inum;
+      }
+    }
+    if (j)
+      isbk->finode[j] = inode->inum;
+  } else
+    isbk->finode[--isbk->nfinodes] = inode->inum;
+
+  mset(&inode->dinode, 0, sizeof(dinode_t));
+  inode->dinode.ftype = IFREE;
+  update_inode_on_disk(inode);
+
+  isbk->locked = false;
+  wakeall(SBLOCKBUSY);
 }
 
 
