@@ -12,6 +12,7 @@
 #ifndef _BLOCKS_H
 #define _BLOCKS_H
 
+#include "buf.h"
 #include "tdefs.h"
 
 #define NFREEINODES 50

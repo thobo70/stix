@@ -35,9 +35,8 @@ bhead_t *balloc(fsnum_t fs)
   ASSERT(fs < MAXFS);
 
   block_t bidx, b = 0;
-  int n = 0, i;
+  int n = 0;
   bhead_t *bh = NULL;
-  byte_t *map;
   isuperblock_t *isbk = getisblock(fs);
   while (isbk->locked) {
     waitfor(SBLOCKBUSY);
@@ -82,7 +81,7 @@ bhead_t *balloc(fsnum_t fs)
   bh->buf->mem[BMAPIDX(bidx)] |= BMAPMASK(bidx);
   bwrite(bh);
   brelse(bh);
-  
+
   bh = getblk(isbk->dev, bidx);
 
   return bh;
