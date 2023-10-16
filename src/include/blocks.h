@@ -24,8 +24,8 @@ typedef struct superblock {
     block_t inodes;
     block_t bbitmap;
     block_t firstblock;
-    word_t ninodes;
-    word_t nblocks;
+    ninode_t ninodes;
+    block_t nblocks;
 } superblock_t;
 
 typedef struct isuperblock {
@@ -38,10 +38,13 @@ typedef struct isuperblock {
     ninode_t lastfinode;
     word_t nfblocks;
     block_t fblocks[NFREEBLOCKS];
+    block_t lastfblock;
 } isuperblock_t;
 
 isuperblock_t *getisblock(fsnum_t fs);
 
-void freeblock(fsnum_t fs, block_t  bl);
+bhead_t *balloc(fsnum_t fs);
+
+void bfree(fsnum_t fs, block_t  bl);
 
 #endif

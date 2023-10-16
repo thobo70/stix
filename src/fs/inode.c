@@ -55,7 +55,7 @@ void freeblocklevel(int level, fsnum_t fs, block_t bl)
       freeblocklevel(level, fs, brefs[i]);
     brelse(b);
   }
-  freeblock(fs, bl);
+  bfree(fs, bl);
 }
 
 

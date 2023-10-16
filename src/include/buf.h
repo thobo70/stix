@@ -57,6 +57,9 @@ void init_buffers(void);
 void add_buf_to_freelist(bhead_t *b, int asFirst);
 
 
+bhead_t *getblk(ldev_t dev, block_t block);
+
+
 /**
  * @brief read block from device dev
  * 
