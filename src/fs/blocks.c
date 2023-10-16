@@ -79,10 +79,12 @@ bhead_t *balloc(fsnum_t fs)
 
   bh = bread(isbk->dev, BMAPBLOCK(bidx) + isbk->dsblock.bbitmap);
   bh->buf->mem[BMAPIDX(bidx)] |= BMAPMASK(bidx);
+  bh->dwrite = true;
   bwrite(bh);
   brelse(bh);
 
   bh = getblk(isbk->dev, bidx);
+  mset(bh->buf->mem, 0, sizeof(bh->buf->mem));
 
   return bh;
 }
