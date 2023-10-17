@@ -25,7 +25,6 @@
 #define HTABVALUE(fs, inum) ((inum) & HTABMASK)
 #define HTAB(fs, inum) ihashtab[HTABVALUE(dev, inum)]
 
-#define NINODESBLOCK  ((block_t)( BLOCKSIZE / sizeof(dinode_t) ))
 #define INODEBLOCK(fs, inum) (((inum - 1) / NINODESBLOCK) + SUPERBLOCKINODE(fs))
 #define INODEOFFSET(inum) (((inum - 1) % NINODESBLOCK) * sizeof(dinode_t))
 

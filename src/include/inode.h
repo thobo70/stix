@@ -70,6 +70,7 @@ typedef struct bmap_t {
   block_t rdablock;
 } bmap_t;
 
+#define NINODESBLOCK  ((block_t)( BLOCKSIZE / sizeof(dinode_t) ))
 
 
 /**

@@ -1,20 +1,77 @@
+/**
+ * @file tests1.c
+ * @author Thomas Boos (tboos70@gmail.com)
+ * @brief CUnit test
+ * @version 0.1
+ * @date 2023-10-17
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
+
 #include "CUnit/CUnitCI.h"
- 
-#include "tdefs.h"
-#include "inode.h"
+
+#include "tests1.h"
+
+#include <stdlib.h>
+#include <string.h>
+
+simpart_t *part = NULL;
 
 /* run at the start of the suite */
 CU_SUITE_SETUP() {
+    part = malloc(sizeof(simpart_t));
+    if (!part)
+        return CUE_NOMEMORY;
     return CUE_SUCCESS;
 }
  
 /* run at the end of the suite */
 CU_SUITE_TEARDOWN() {
+    if (part)
+        free(part);
     return CUE_SUCCESS;
 }
  
-/* run at the start of each test */
+/**
+ * @brief Construct a new cu test setup object
+ * 
+ * @startuml
+ * salt
+ * {#
+ * Block | used for
+ * 0 | reserved
+ * 1 | superblock
+ * 2 | inode 1
+ * 3 | inode 2
+ * 4 | bitmap
+ * 5 | root dir
+ * }
+ * @enduml
+ */
 CU_TEST_SETUP() {
+    memset(part, 0, sizeof(simpart_t));
+    part->fs.sblock.super.version = 1;
+    part->fs.sblock.super.type = 0;
+    part->fs.sblock.super.inodes = 2; // start block of inodes
+    part->fs.sblock.super.bbitmap = part->fs.sblock.super.inodes + SIMINODEBLOCKS;
+    part->fs.sblock.super.firstblock = part->fs.sblock.super.bbitmap + SIMBMAPBLOCKS;
+    part->fs.sblock.super.inodes = SIMNINODES;
+    part->fs.sblock.super.nblocks = SIMNBLOCKS;
+
+    part->fs.inodes.i[0].ftype = DIRECTORY;
+    part->fs.inodes.i[0].nlinks = 2;
+    part->fs.inodes.i[0].fsize = 0;
+    part->fs.inodes.i[0].blockrefs[0] = part->fs.sblock.super.firstblock;
+
+    dirent_t *rootdir = (dirent_t*) part->block[part->fs.inodes.i[0].blockrefs[0]].mem;
+    rootdir[0].inum = 1; // first inode starts with 1 not 0
+    strncpy(rootdir[0].name, ".", DIRNAMEENTRY);
+    rootdir[1].inum = 1; // first inode starts with 1 not 0
+    strncpy(rootdir[1].name, "..", DIRNAMEENTRY);
+
+    byte_t *bmap = part->block[part->fs.sblock.super.bbitmap].mem;
+    bmap[0] = 0x3F;  // first 6 bits of bitmap are set, 6 blocks are used
 }
  
 /* run at the end of each test */
