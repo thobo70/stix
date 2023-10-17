@@ -94,6 +94,42 @@ void bfree(fsnum_t fs, block_t  bl)
 {
   ASSERT(fs < MAXFS);
   ASSERT(bl > 0);
-  /// TODO set bit for block bl in bitfield of fs to 0
+
+  isuperblock_t *isbk = getisblock(fs);
+  int i;
+  ASSERT(bl < isbk->dsblock.nblocks);
+  while (isbk->locked) {
+    waitfor(SBLOCKBUSY);
+  }
+  isbk->locked = true;
+
+  if (isbk->nfblocks >= NFREEBLOCKS) {
+    isbk->nfblocks = NFREEBLOCKS - 1;
+    isbk->fblocks[isbk->nfblocks] = bl;
+  } if (isbk->nfblocks > 0) {
+    if (isbk->fblocks[isbk->nfblocks] > bl) {
+      isbk->fblocks[--isbk->nfblocks] = bl;
+    } else {
+      for ( i = isbk->nfblocks + 1 ; i < NFREEBLOCKS ; ++i )
+        if ((isbk->fblocks[i] > bl) || (isbk->fblocks[i] == 0)) {
+          isbk->fblocks[i] = bl;
+          break;
+        }
+    }
+  } else {
+      for ( i = 0 ; i < NFREEBLOCKS ; ++i )
+        if ((isbk->fblocks[i] > bl) || (isbk->fblocks[i] == 0)) {
+          isbk->fblocks[i] = bl;
+          break;
+        }
+  }
+  isbk->locked = false;
+  wakeall(SBLOCKBUSY);
+
+  bhead_t *bh = bread(isbk->dev, BMAPBLOCK(bl) + isbk->dsblock.bbitmap);
+  bh->buf->mem[BMAPIDX(bl)] &= ~BMAPMASK(bl);
+  bh->dwrite = true;
+  bwrite(bh);
+  brelse(bh);
 }
 
