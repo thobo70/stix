@@ -18,6 +18,17 @@
 
 simpart_t *part = NULL;
 
+void testdiskwrite(byte_t *buf, block_t bidx)
+{
+    memcpy(part->block[bidx].mem, buf, BLOCKSIZE);
+}
+
+void testdiskread(byte_t *buf, block_t bidx)
+{
+    memcpy(buf, part->block[bidx].mem, BLOCKSIZE);
+}
+
+
 /* run at the start of the suite */
 CU_SUITE_SETUP() {
     part = malloc(sizeof(simpart_t));
@@ -87,20 +98,20 @@ static void test_typesize_pass(void) {
 }
  
 /* Test that two is bigger than one */
-static void test_wordsize_pass(void) {
+static void test_buffer_pass(void) {
 }
  
 /* Test that two is bigger than one */
-static void test_dwordsize_pass(void) {
+static void test_inode_pass(void) {
 }
 
 /* Test that two is bigger than one */
-static void test_dinodesize_pass(void) {
+static void test_file_pass(void) {
 }
  
 CUNIT_CI_RUN("my-suite",
              CUNIT_CI_TEST(test_typesize_pass),
-             CUNIT_CI_TEST(test_wordsize_pass),
-             CUNIT_CI_TEST(test_dwordsize_pass),
-             CUNIT_CI_TEST(test_dinodesize_pass)
+             CUNIT_CI_TEST(test_buffer_pass),
+             CUNIT_CI_TEST(test_inode_pass),
+             CUNIT_CI_TEST(test_file_pass)
              )
