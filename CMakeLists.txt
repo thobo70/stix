@@ -29,6 +29,7 @@ add_executable(
   src/fs/fs.c
   src/fs/inode.c
   src/fs/blocks.c
+  src/dd/dd.c
   src/util/utils.c
 )
 
@@ -46,6 +47,7 @@ add_executable(
   src/fs/fs.c
   src/fs/inode.c
   src/fs/blocks.c
+  src/dd/dd.c
   src/util/utils.c
   tests/tests1.c
 )

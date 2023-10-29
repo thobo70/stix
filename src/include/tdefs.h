@@ -25,7 +25,6 @@ typedef dword_t sizem_t;
 #define NULL ((void*)0)
 #endif
 
-typedef word_t ldev_t;      ///< logical device
 typedef word_t block_t;     ///< block number on disk (sector)
 typedef word_t ninode_t;    ///< index of inode in filesystem
 typedef byte_t nref_t;      ///< number of (file) references to the inode
@@ -37,5 +36,17 @@ typedef dword_t utime_t;     ///< system time
 typedef word_t nlinks_t;    ///< number of links (directory entries) to the inode
 typedef dword_t fsize_t;    ///< size of file
 typedef byte_t fsnum_t;     ///< index of filesystem
+
+typedef byte_t ldevmajor_t;      ///< logical major device
+typedef byte_t ldevminor_t;      ///< logical minor device
+
+typedef union ldev_t {
+  struct {
+    ldevmajor_t major;
+    ldevminor_t minor;
+  };
+  word_t ldev;
+} ldev_t;
+
 
 #endif

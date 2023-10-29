@@ -14,8 +14,6 @@
 
 #include "tdefs.h"
 
-#include "dd.h"
-
 #define BLOCKSIZE 512
 
 

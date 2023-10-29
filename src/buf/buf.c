@@ -163,7 +163,7 @@ bhead_t *getblk(ldev_t dev, block_t block)
   bhead_t *found = NULL;
   for(;;) {
     for ( found = HTAB(dev, block) ; found ; found = found->hnext )
-      if ((found->dev == dev) && (found->block == block))
+      if ((found->dev.ldev == dev.ldev) && (found->block == block))
         break;
     if (found) {
       if (found->busy) {
