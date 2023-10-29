@@ -5,12 +5,15 @@
 ## Aim of the project
 An Unix like system for small 8 and 16-Bit Computers, which should spend as little as possible ram during execution. In addition, the whole suite should be able build itself on the small Computer.
 
-## Prepare for developping
-for doxygen support following packages needs to be installed:
+## Getting started
+for developping following packages needs to be installed:
 ```
-sudo apt update
-sudo apt upgrade -y
+sudo apt install build-essential llvm clang git git-lfs cmake default-jre
 sudo apt install doxygen doxygen-latex doxygen-doc doxygen-gui graphviz xapian-tools
+git lfs install
+git config --global user.name "your name"
+git config --global user.email your@email.com
+git config --global http.sslVerify false
 ```
 
 ## CUnit
