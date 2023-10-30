@@ -461,6 +461,7 @@ iinode_t *namei(const char *p)
   if (!wi)
     return NULL;
 
+  n = snlen(p, DIRNAMEENTRY);
   while (*p)  {
     for ( ps = 0 ; p[ps] && (p[ps] != '/') ; ++ps );
     if (ps > DIRNAMEENTRY) {
