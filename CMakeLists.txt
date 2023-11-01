@@ -8,7 +8,6 @@ project(
 )
 
 set(SRC 
-  src/main.c
   src/pc/pc.c
   src/buf/buf.c
   src/fs/fs.c
@@ -36,6 +35,7 @@ find_package(
 
 add_executable(
   mockup
+  src/main.c
   ${SRC}
 )
 
