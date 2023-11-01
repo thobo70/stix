@@ -7,6 +7,19 @@ project(
   LANGUAGES C 
 )
 
+set(SRC 
+  src/main.c
+  src/pc/pc.c
+  src/buf/buf.c
+  src/fs/fs.c
+  src/fs/inode.c
+  src/fs/blocks.c
+  src/dd/dd.c
+  src/dd/tstcon.c
+  src/dd/tstdisk.c
+  src/util/utils.c
+)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -pedantic-errors")
 
 add_subdirectory(cunit/CUnit)
@@ -23,16 +36,7 @@ find_package(
 
 add_executable(
   mockup
-  src/main.c
-  src/pc/pc.c
-  src/buf/buf.c
-  src/fs/fs.c
-  src/fs/inode.c
-  src/fs/blocks.c
-  src/dd/dd.c
-  src/dd/tstcon.c
-  src/dd/tstdisk.c
-  src/util/utils.c
+  ${SRC}
 )
 
 set_target_properties( mockup PROPERTIES COMPILE_FLAGS "-Wextra" )
@@ -44,15 +48,7 @@ target_include_directories(
 
 add_executable(
   tests1
-  src/pc/pc.c
-  src/buf/buf.c
-  src/fs/fs.c
-  src/fs/inode.c
-  src/fs/blocks.c
-  src/dd/dd.c
-  src/dd/tstcon.c
-  src/dd/tstdisk.c
-  src/util/utils.c
+  ${SRC}
   tests/tests1.c
 )
 
