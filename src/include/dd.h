@@ -16,13 +16,15 @@
 
 #define BLOCKSIZE 512
 
-#define NBDEVENTRIES (sizeof(bdevtable) / sizeof(bdev_t))
+#define NBDEVENTRIES (sizeof(bdevtable) / sizeof(bdev_t*))
 
 typedef struct bdev_t {
   void (*open)(ldevminor_t minor);
   void (*close)(ldevminor_t minor);
   void (*strategy)(ldevminor_t minor, bhead_t *bh);
 } bdev_t;
+
+#define NCDEVENTRIES (sizeof(cdevtable) / sizeof(cdev_t*))
 
 typedef struct cdev_t {
   void (*open)(ldevminor_t minor);
