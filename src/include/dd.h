@@ -16,6 +16,8 @@
 
 #define BLOCKSIZE 512
 
+#define NBDEVENTRIES (sizeof(bdevtable) / sizeof(bdev_t))
+
 typedef struct bdev_t {
   void (*open)(ldevminor_t minor);
   void (*close)(ldevminor_t minor);

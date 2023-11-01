@@ -30,6 +30,8 @@ add_executable(
   src/fs/inode.c
   src/fs/blocks.c
   src/dd/dd.c
+  src/dd/tstcon.c
+  src/dd/tstdisk.c
   src/util/utils.c
 )
 
@@ -48,6 +50,8 @@ add_executable(
   src/fs/inode.c
   src/fs/blocks.c
   src/dd/dd.c
+  src/dd/tstcon.c
+  src/dd/tstdisk.c
   src/util/utils.c
   tests/tests1.c
 )

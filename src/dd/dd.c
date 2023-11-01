@@ -11,5 +11,17 @@
 
 #include "dd.h"
 
+bdev_t *bdevtable[] = {
+  NULL,
+  NULL
+};
+
+extern cdev_t tstcon;
+
+cdev_t *cdevtable[] = {
+  &tstcon
+};
+
+
 
 
