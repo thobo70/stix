@@ -31,6 +31,14 @@ int sncmp(const char *s1, const char *s2, sizem_t n)
   return strncmp(s1, s2, n);
 }
 
+
+/**
+ * @brief returns length of string s but maximum of mlen
+ * 
+ * @param s 
+ * @param mlen 
+ * @return sizem_t 
+ */
 sizem_t snlen(const char *s, sizem_t mlen)
 {
   sizem_t i = 0;
