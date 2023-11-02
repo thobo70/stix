@@ -13,8 +13,21 @@
 
 #include "tests1.h"
 
+#include "dd.h"
 #include <stdlib.h>
 #include <string.h>
+
+extern bdev_t tstdisk;
+
+bdev_t *bdevtable[] = {
+  &tstdisk
+};
+
+extern cdev_t tstcon;
+
+cdev_t *cdevtable[] = {
+  &tstcon
+};
 
 simpart_t *part = NULL;
 

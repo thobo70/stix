@@ -14,8 +14,6 @@ set(SRC
   src/fs/inode.c
   src/fs/blocks.c
   src/dd/dd.c
-  src/dd/tstcon.c
-  src/dd/tstdisk.c
   src/util/utils.c
 )
 
@@ -48,8 +46,10 @@ target_include_directories(
 
 add_executable(
   tests1
-  ${SRC}
   tests/tests1.c
+  tests/tstcon.c
+  tests/tstdisk.c
+  ${SRC}
 )
 
 set_target_properties( tests1 PROPERTIES COMPILE_FLAGS "-Wextra" )

@@ -14,7 +14,7 @@
 
 void tstcon_read(ldevminor_t minor, bhead_t *bh);
 void tstcon_write(ldevminor_t minor, bhead_t *bh);
-void tstcon_ioctl(ldevminor_t minor, bhead_t *bh);
+void tstcon_ioctl(ldevminor_t minor, int cmd, void *arg);
 
 cdev_t tstcon = {
   NULL,
@@ -40,10 +40,11 @@ void tstcon_write(ldevminor_t minor, bhead_t *bh)
 
 
 
-void tstcon_ioctl(ldevminor_t minor, bhead_t *bh)
+void tstcon_ioctl(ldevminor_t minor, int cmd, void *arg)
 {
   ASSERT(minor < 1);
-  ASSERT(bh);
+  ASSERT(cmd);
+  ASSERT(arg);
 }
 
 

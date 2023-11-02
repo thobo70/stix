@@ -11,8 +11,19 @@
 
 #include <stdio.h>
 
+#include "dd.h"
 #include "inode.h"
 #include "buf.h"
+
+
+bdev_t *bdevtable[] = {
+  NULL
+};
+
+
+cdev_t *cdevtable[] = {
+  NULL
+};
 
 /**
  * @brief main of mockup
