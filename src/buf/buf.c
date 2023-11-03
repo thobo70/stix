@@ -207,14 +207,20 @@ void brelse(bhead_t *b)
 
 
 
-bhead_t *writequeue = NULL;
-
 void buffer_synced(bhead_t *b, int err)
 {
   ASSERT(b);
   b->dwrite = false;
+  
+  if (!b->busy)
+    add_buf_to_freelist(b, err != 0);
+  
+  if (b->valid)
+    wakeall(BLOCKREAD);
+  else
+    wakeall(BLOCKWRITE);  
+  
   b->valid = (err == 0);
-  add_buf_to_freelist(b, !b->valid);
 }
 
 /**
@@ -225,9 +231,12 @@ void buffer_synced(bhead_t *b, int err)
 void sync_buffer_to_disk(bhead_t *b)
 {
   ASSERT(b);
-  if (writequeue)
-    writequeue->fprev = b;
-  writequeue = b;
+  ASSERT(b->valid);
+  ASSERT(b->dwrite == false);
+  ASSERT(b->written == false);
+  ASSERT(b->busy == true);
+  ASSERT(b->infreelist == false);
+  bdevstrategy(b->dev, b);
 }
 
 /**
@@ -238,6 +247,11 @@ void sync_buffer_to_disk(bhead_t *b)
 void sync_buffer_from_disk(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(b->valid == false);
+  ASSERT(b->written == false);
+  ASSERT(b->busy == true);
+  ASSERT(b->infreelist == false);
+  bdevstrategy(b->dev, b);
 }
 
 

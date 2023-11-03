@@ -34,6 +34,7 @@ cdev_t *cdevtable[] = {
  */
 int main(void)
 {
+  ddinit();
   init_buffers();
   init_inodes();
   
