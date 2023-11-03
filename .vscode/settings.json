@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "utils.h": "c",
+    "buf.h": "c",
+    "blocks.h": "c",
+    "dd.h": "c"
+  }
+}

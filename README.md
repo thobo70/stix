@@ -8,7 +8,7 @@ An Unix like system for small 8 and 16-Bit Computers, which should spend as litt
 ## Getting started
 for developping following packages needs to be installed:
 ```
-sudo apt install build-essential llvm clang git git-lfs cmake default-jre
+sudo apt install build-essential llvm clang gdb git git-lfs cmake default-jre
 sudo apt install doxygen doxygen-latex doxygen-doc doxygen-gui graphviz xapian-tools
 git lfs install
 git config --global user.name "your name"
