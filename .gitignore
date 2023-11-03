@@ -1,2 +1,3 @@
 *.o
 build/
+tests/tests1-Results.xml
