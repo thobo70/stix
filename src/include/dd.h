@@ -30,4 +30,15 @@ typedef struct cdev_t {
   void (*ioctl)(ldevminor_t minor, int cmd, void *arg);
 } cdev_t;
 
+
+void bdevopen(ldev_t ldev);
+void bdevclose(ldev_t ldev);
+void bdevstrategy(ldev_t ldev, bhead_t *bh);
+
+void cdevopen(ldev_t ldev);
+void cdevclose(ldev_t ldev);
+void cdevread(ldev_t ldev, bhead_t *bh);
+void cdevwrite(ldev_t ldev, bhead_t *bh);
+void cdevioctl(ldev_t ldev, int cmd, void *arg);
+
 #endif

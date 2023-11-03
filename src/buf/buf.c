@@ -302,6 +302,7 @@ bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2)
 void bwrite(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(b->valid);     /// buffer must be valid
   b->written = false;
   if (!b->dwrite) {
     sync_buffer_to_disk(b);

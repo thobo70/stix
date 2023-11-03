@@ -50,7 +50,7 @@ void bdevclose(ldev_t ldev)
 }
 
 
-void bdevread(ldev_t ldev, bhead_t *bh)
+void bdevstrategy(ldev_t ldev, bhead_t *bh)
 {
   ASSERT(ldev.major < nbdeventries);
   ASSERT(bh);
@@ -60,14 +60,6 @@ void bdevread(ldev_t ldev, bhead_t *bh)
 }
 
 
-void bdevwrite(ldev_t ldev, bhead_t *bh)
-{
-  ASSERT(ldev.major < nbdeventries);
-  ASSERT(bh);
-  ASSERT(bdevtable[ldev.major]);
-
-  bdevtable[ldev.major]->strategy(ldev.minor, bh);
-}
 
 
 void cdevopen(ldev_t ldev)
