@@ -16,6 +16,7 @@
 #include "fs.h"
 #include "utils.h"
 #include "dd.h"
+#include "pc.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -128,10 +129,19 @@ void tstdisk_strategy(ldevminor_t minor, bhead_t *bh)
 {
   ASSERT(minor < 1);
   ASSERT(bh);
-  if (bh->valid)
+  int wr = bh->valid;
+
+  if (wr) {
     testdiskwrite(bh->buf->mem, bh->block);
-  else
+    bh->written = true;
+  } else {
     testdiskread(bh->buf->mem, bh->block);
+    bh->valid = true;
+  }
+  
+  buffer_synced(bh, 0);
+
+  wakeall(wr ? BLOCKWRITE : BLOCKREAD);
 }
 
 

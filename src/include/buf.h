@@ -91,4 +91,12 @@ void bwrite(bhead_t *b);
  */
 void brelse(bhead_t *b);
 
+/**
+ * @brief is called when buffer is synced
+ * 
+ * @param b 
+ * @param error 
+ */
+void buffer_synced(bhead_t *b, int error);
+
 #endif

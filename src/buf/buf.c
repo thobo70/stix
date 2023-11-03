@@ -232,7 +232,6 @@ void sync_buffer_to_disk(bhead_t *b)
 {
   ASSERT(b);
   ASSERT(b->valid);
-  ASSERT(b->dwrite == false);
   ASSERT(b->written == false);
   ASSERT(b->busy == true);
   ASSERT(b->infreelist == false);
@@ -248,7 +247,6 @@ void sync_buffer_from_disk(bhead_t *b)
 {
   ASSERT(b);
   ASSERT(b->valid == false);
-  ASSERT(b->written == false);
   ASSERT(b->busy == true);
   ASSERT(b->infreelist == false);
   bdevstrategy(b->dev, b);

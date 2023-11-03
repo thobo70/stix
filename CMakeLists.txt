@@ -8,7 +8,6 @@ project(
 )
 
 set(SRC 
-  src/pc/pc.c
   src/buf/buf.c
   src/fs/fs.c
   src/fs/inode.c
@@ -34,6 +33,7 @@ find_package(
 add_executable(
   mockup
   src/main.c
+  src/pc/pc.c
   ${SRC}
 )
 
@@ -49,6 +49,7 @@ add_executable(
   tests/tests1.c
   tests/tstcon.c
   tests/tstdisk.c
+  tests/pc.mockup.c
   ${SRC}
 )
 

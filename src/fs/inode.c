@@ -452,6 +452,7 @@ iinode_t *namei(const char *p)
   int found;
 
   ASSERT(p);
+  ASSERT(active);
   root = iget(active->u->fsroot->fs, active->u->fsroot->inum);
   if (*p == '/') {
     wi = root;
