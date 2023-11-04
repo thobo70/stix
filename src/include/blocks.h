@@ -42,6 +42,8 @@ typedef struct isuperblock {
     block_t lastfblock;
 } isuperblock_t;
 
+void init_isblock(fsnum_t fs, ldev_t dev);
+
 isuperblock_t *getisblock(fsnum_t fs);
 
 bhead_t *balloc(fsnum_t fs);

@@ -31,6 +31,9 @@ git submodule update
 for inspiration you can read following documents. Especially the first link covers the aimed functionality best
  * https://books.google.de/books/about/The_Design_of_the_UNIX_Operating_System.html?id=NrBQAAAAMAAJ&redir_esc=y
  * https://warsus.github.io/lions-/
+ * https://plantuml.com/en/sitemap
+ * https://cunit.sourceforge.net/documentation.html
+ 
 
 
 

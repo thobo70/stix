@@ -442,7 +442,6 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
 iinode_t *namei(const char *p)
 {
   iinode_t *wi = NULL;    // working inode
-  iinode_t *root = NULL;  // root inode
   dword_t i, n;           // index and number of directory entries 
   int ps;                 // size of current path name part
   bmap_t bm;
@@ -453,9 +452,8 @@ iinode_t *namei(const char *p)
 
   ASSERT(p);
   ASSERT(active);
-  root = iget(active->u->fsroot->fs, active->u->fsroot->inum);
   if (*p == '/') {
-    wi = root;
+    wi = iget(active->u->fsroot->fs, active->u->fsroot->inum);
     ++p;
   } else
     wi = iget(active->u->workdir->fs, active->u->workdir->inum);
@@ -467,11 +465,13 @@ iinode_t *namei(const char *p)
     for ( ps = 0 ; p[ps] && (p[ps] != '/') ; ++ps );
     if (ps > DIRNAMEENTRY) {
       /// @todo path name too long error
+      iput(wi);
       return NULL;
     }
-    if ((sncmp(p, "..", n) != 0) || (wi != root)) {  // if *p is ".." and wi is root then continue
+    if ((sncmp(p, "..", n) != 0) || (wi != active->u->fsroot)) {  // if *p is ".." and wi is root then continue
       if (wi->dinode.ftype != DIRECTORY) {
         /// @todo set error no dir
+        iput(wi);
         return NULL;
       }
       /// @todo check permission
@@ -492,6 +492,7 @@ iinode_t *namei(const char *p)
       }
       if (!found) {
         /// @todo error entry not found
+        iput(wi);
         return NULL;
       }
     }

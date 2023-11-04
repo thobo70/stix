@@ -30,6 +30,21 @@ isuperblock_t *getisblock(fsnum_t fs)
 #define BMAPIDX(idx)    ((idx % (BLOCKSIZE * 8)) / 8)
 #define BMAPMASK(idx)   (byte_t)(1 << (idx % 8))
 
+
+
+void init_isblock(fsnum_t fs, ldev_t dev)
+{
+  ASSERT(fs < MAXFS);
+  isuperblock_t *isbk = getisblock(fs);
+  bhead_t *bh = bread(dev, 1);  // read superblock
+  mset(isbk, 0, sizeof(isuperblock_t));
+  isbk->dev = dev;
+  mcpy(&isbk->dsblock, bh->buf->mem, sizeof(superblock_t));
+  brelse(bh);
+}
+
+
+
 bhead_t *balloc(fsnum_t fs)
 {
   ASSERT(fs < MAXFS);
@@ -85,6 +100,8 @@ bhead_t *balloc(fsnum_t fs)
 
   bh = getblk(isbk->dev, bidx);
   mset(bh->buf->mem, 0, sizeof(bh->buf->mem));
+  bh->valid = true;
+  bh->dwrite = true;
 
   return bh;
 }

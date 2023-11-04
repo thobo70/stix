@@ -12,8 +12,20 @@
 #include "pc.h"
 #include "utils.h"
 
+u_t u1 = {
+  .fsroot = NULL,
+  .workdir = NULL
+};
 
-process_t *active = NULL;
+process_t p1 = {
+  .pid = 1,
+  .isswapped = false,
+  .iswaitingfor = RUNHIGH,
+  .queue = NULL,
+  .u = &u1
+};
+
+process_t *active = &p1;
 
 waitfor_t wokenup = 0;
 

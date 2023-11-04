@@ -108,7 +108,7 @@ void tstdisk_open(ldevminor_t minor)
   part->fs.sblock.super.inodes = 2; // start block of inodes
   part->fs.sblock.super.bbitmap = part->fs.sblock.super.inodes + SIMINODEBLOCKS;
   part->fs.sblock.super.firstblock = part->fs.sblock.super.bbitmap + SIMBMAPBLOCKS;
-  part->fs.sblock.super.inodes = SIMNINODES;
+  part->fs.sblock.super.ninodes = SIMNINODES;
   part->fs.sblock.super.nblocks = SIMNBLOCKS;
 
   part->fs.inodes.i[0].ftype = DIRECTORY;
