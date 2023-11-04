@@ -71,6 +71,7 @@ add_test(
   NAME tests1
   COMMAND tests1
 )
+set_property(TEST tests1 PROPERTY TIMEOUT "10")
 
 set(DOXYGEN_EXCLUDE_PATTERNS */cunit/*)
 set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
