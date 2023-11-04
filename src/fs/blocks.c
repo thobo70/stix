@@ -44,7 +44,37 @@ void init_isblock(fsnum_t fs, ldev_t dev)
 }
 
 
-
+/**
+ * @brief allocate a block from fs 
+ * 
+ * @startuml
+ * start
+ * :get superblock;
+ * if (superblock locked) then (yes)
+ *   :sleep(event superblock gets free);
+ * else (no)
+ * endif
+ * :lock superblock;
+ * if (free list empty) then (yes)
+ *   :try to refill free list;
+ * else (no)
+ * endif
+ * if (free list empty) then (yes)
+ *   :unlock superblock\nwake all unlock superblock\nreturn NULL;
+ *   stop
+ * else (no)
+ *   :get block from free list;
+ *   :unlock superblock\nwake all unlock superblock;
+ *   :mark block as used in bitmap;
+ *   :get buffer for block\nzero buffer\nset buffer as valid;
+ *   :return buffer;
+ *   stop
+ * endif
+ * @enduml
+ * 
+ * @param fs        file system number
+ * @return bhead_t* pointer to buffer header of allocated block or NULL if no block is available/error occured
+ */
 bhead_t *balloc(fsnum_t fs)
 {
   ASSERT(fs < MAXFS);
@@ -107,6 +137,12 @@ bhead_t *balloc(fsnum_t fs)
 }
 
 
+/**
+ * @brief free block bl in file system fs
+ * 
+ * @param fs        file system number
+ * @param bl        block to free
+ */
 void bfree(fsnum_t fs, block_t  bl)
 {
   ASSERT(fs < MAXFS);
