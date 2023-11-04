@@ -59,14 +59,22 @@ bdev_t tstdisk = {
 };
 
 
+char *tstdisk_getblock(block_t bidx)
+{
+  ASSERT(bidx < SIMNBLOCKS);
+  return (char*) part->block[bidx].mem;
+}
+
 void testdiskwrite(byte_t *buf, block_t bidx)
 {
-    memcpy(part->block[bidx].mem, buf, BLOCKSIZE);
+  ASSERT(bidx < SIMNBLOCKS);
+  memcpy(part->block[bidx].mem, buf, BLOCKSIZE);
 }
 
 void testdiskread(byte_t *buf, block_t bidx)
 {
-    memcpy(buf, part->block[bidx].mem, BLOCKSIZE);
+  ASSERT(bidx < SIMNBLOCKS);
+  memcpy(buf, part->block[bidx].mem, BLOCKSIZE);
 }
 
 
@@ -129,7 +137,16 @@ void tstdisk_strategy(ldevminor_t minor, bhead_t *bh)
 {
   ASSERT(minor < 1);
   ASSERT(bh);
+
   int wr = bh->valid;
+
+  if (bh->block >= SIMNBLOCKS) {
+    bh->valid = false;
+    bh->error = true;
+    buffer_synced(bh, 1);
+    wakeall(wr ? BLOCKWRITE : BLOCKREAD);
+    return;
+  }
 
   if (wr) {
     testdiskwrite(bh->buf->mem, bh->block);

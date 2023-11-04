@@ -34,6 +34,7 @@ typedef struct bhead_t {
   byte_t valid : 1;
   byte_t written : 1;
   byte_t infreelist : 1;
+  byte_t error : 1;
   ldev_t dev;
   block_t block;
 } bhead_t;

@@ -83,8 +83,10 @@ void init_buffers(void)
   mset(bufhead, 0, sizeof(bufhead));
   mset(hashtab, 0, sizeof(hashtab));
 
-  for ( int i = 0 ; i < NBUFFER ; ++i ) 
+  for ( int i = 0 ; i < NBUFFER ; ++i ) {
+    bufhead[i].buf = &buf[i];
     add_buf_to_freelist(&bufhead[i], false);
+  }
 }
 
 
@@ -101,6 +103,7 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
 
   ASSERT(b);
   b->valid = false;
+  b->error = false;
   if (b->hnext) {
     if (b->hnext == b)
       HTAB(b->dev, b->block) = NULL;
@@ -162,7 +165,7 @@ bhead_t *getblk(ldev_t dev, block_t block)
 {
   bhead_t *found = NULL;
   for(;;) {
-    for ( found = HTAB(dev, block) ; found ; found = found->hnext )
+    for ( found = HTAB(dev, block) ; found ; found = (found->hnext == HTAB(dev, block)) ? NULL : found->hnext )
       if ((found->dev.ldev == dev.ldev) && (found->block == block))
         break;
     if (found) {
@@ -231,6 +234,7 @@ void buffer_synced(bhead_t *b, int err)
 void sync_buffer_to_disk(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(b->error == false);
   ASSERT(b->valid);
   ASSERT(b->written == false);
   ASSERT(b->busy == true);
@@ -246,6 +250,7 @@ void sync_buffer_to_disk(bhead_t *b)
 void sync_buffer_from_disk(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(b->error == false);
   ASSERT(b->valid == false);
   ASSERT(b->busy == true);
   ASSERT(b->infreelist == false);
@@ -268,7 +273,7 @@ bhead_t *bread(ldev_t dev, block_t block)
     return b;
 
   sync_buffer_from_disk(b);
-  while (!b->valid)
+  while (!b->valid && !b->error)
     waitfor(BLOCKREAD);
 
   return b;
@@ -296,7 +301,7 @@ bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2)
   if (!b2->valid)
     sync_buffer_from_disk(b2);
 
-  while (!b1->valid)
+  while (!b1->valid && !b1->error)
     waitfor(BLOCKREAD);
 
   brelse(b2);   /// @bug potential race condition
@@ -318,7 +323,7 @@ void bwrite(bhead_t *b)
   b->written = false;
   if (!b->dwrite) {
     sync_buffer_to_disk(b);
-    while (!b->written)
+    while (!b->written && !b->error)
       waitfor(BLOCKWRITE); 
   }
 }

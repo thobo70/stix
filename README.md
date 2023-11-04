@@ -2,8 +2,8 @@
 
 ![stix (super tiny IX)](stix_logo.png)
 
-## Aim of the project
-An Unix like system for small 8 and 16-Bit Computers, which should spend as little as possible ram during execution. In addition, the whole suite should be able build itself on the small Computer.
+## Aim of the project "Super Tiny unIX" (stix)
+An Unix like system for small 8 and 16-Bit Computers, which should spend as little as possible ram during execution. In addition, the whole suite (future) should be able build itself on the small Computer.
 
 ## Getting started
 for developping following packages needs to be installed:
@@ -23,6 +23,9 @@ cd cunit
 git submodule init
 git submodule update
 ```
+ * https://cunit.sourceforge.net/doc/index.html
+ * https://cunit.sourceforge.net/doxdocs/index.html
+
 
 ## Sources of documents
 for inspiration you can read following documents. Especially the first link covers the aimed functionality best
