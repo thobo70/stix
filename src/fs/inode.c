@@ -320,13 +320,14 @@ void ifree(iinode_t *inode)
  */
 iinode_t *iget(fsnum_t fs, ninode_t inum)
 {
-  iinode_t *found = NULL;
+  iinode_t *i, *found = NULL;
   bhead_t *bhead = NULL;
 
   ASSERT(fs < MAXFS);
   ASSERT(inum < getisblock(fs)->dsblock.ninodes);
   for(;;) {
-    for ( found = HTAB(fs, inum) ; found ; found = found->hnext )
+    i = HTAB(fs, inum);
+    for ( found = i ; found ; found = (found->hnext == i) ? NULL : found->hnext )
       if ((found->fs == fs) && (found->inum == inum))
         break;
     if (found) {

@@ -27,6 +27,8 @@
 #define SIMBMAPBITS (BLOCKSIZE * 8)
 #define SIMBMAPBLOCKS ((SIMNBLOCKS / SIMBMAPBITS) + (((SIMNBLOCKS % SIMBMAPBITS) == 0) ? 0 : 1))
 
+#define SIMNMINOR 2
+
 typedef struct simfs {
   buffer_t block0;
   union {
@@ -45,7 +47,7 @@ typedef union {
   buffer_t block[SIMNBLOCKS];
 } simpart_t;
 
-simpart_t *part = NULL;
+simpart_t *part[SIMNMINOR] =  { NULL, NULL };
 
 
 void tstdisk_open(ldevminor_t minor);
@@ -59,22 +61,28 @@ bdev_t tstdisk = {
 };
 
 
-char *tstdisk_getblock(block_t bidx)
+char *tstdisk_getblock(ldevminor_t minor, block_t bidx)
 {
+  ASSERT(minor < SIMNMINOR);
   ASSERT(bidx < SIMNBLOCKS);
-  return (char*) part->block[bidx].mem;
+  ASSERT(part[minor]);
+  return (char*) part[minor]->block[bidx].mem;
 }
 
-void testdiskwrite(byte_t *buf, block_t bidx)
+void testdiskwrite(byte_t *buf, ldevminor_t minor, block_t bidx)
 {
+  ASSERT(minor < SIMNMINOR);
   ASSERT(bidx < SIMNBLOCKS);
-  memcpy(part->block[bidx].mem, buf, BLOCKSIZE);
+  ASSERT(part[minor]);
+  memcpy(part[minor]->block[bidx].mem, buf, BLOCKSIZE);
 }
 
-void testdiskread(byte_t *buf, block_t bidx)
+void testdiskread(byte_t *buf, ldevminor_t minor, block_t bidx)
 {
+  ASSERT(minor < SIMNMINOR);
   ASSERT(bidx < SIMNBLOCKS);
-  memcpy(buf, part->block[bidx].mem, BLOCKSIZE);
+  ASSERT(part[minor]);
+  memcpy(buf, part[minor]->block[bidx].mem, BLOCKSIZE);
 }
 
 
@@ -99,38 +107,38 @@ void testdiskread(byte_t *buf, block_t bidx)
 void tstdisk_open(ldevminor_t minor)
 {
   ASSERT(minor < 1);
-  part = malloc(sizeof(simpart_t));
-  ASSERT(part);
+  part[minor] = malloc(sizeof(simpart_t));
+  ASSERT(part[minor]);
 
-  memset(part, 0, sizeof(simpart_t));
-  part->fs.sblock.super.version = 1;
-  part->fs.sblock.super.type = 0;
-  part->fs.sblock.super.inodes = 2; // start block of inodes
-  part->fs.sblock.super.bbitmap = part->fs.sblock.super.inodes + SIMINODEBLOCKS;
-  part->fs.sblock.super.firstblock = part->fs.sblock.super.bbitmap + SIMBMAPBLOCKS;
-  part->fs.sblock.super.ninodes = SIMNINODES;
-  part->fs.sblock.super.nblocks = SIMNBLOCKS;
+  memset(part[minor], 0, sizeof(simpart_t));
+  part[minor]->fs.sblock.super.version = 1;
+  part[minor]->fs.sblock.super.type = 0;
+  part[minor]->fs.sblock.super.inodes = 2; // start block of inodes
+  part[minor]->fs.sblock.super.bbitmap = part[minor]->fs.sblock.super.inodes + SIMINODEBLOCKS;
+  part[minor]->fs.sblock.super.firstblock = part[minor]->fs.sblock.super.bbitmap + SIMBMAPBLOCKS;
+  part[minor]->fs.sblock.super.ninodes = SIMNINODES;
+  part[minor]->fs.sblock.super.nblocks = SIMNBLOCKS;
 
-  part->fs.inodes.i[0].ftype = DIRECTORY;
-  part->fs.inodes.i[0].nlinks = 2;
-  part->fs.inodes.i[0].fsize = 0;
-  part->fs.inodes.i[0].blockrefs[0] = part->fs.sblock.super.firstblock;
+  part[minor]->fs.inodes.i[0].ftype = DIRECTORY;
+  part[minor]->fs.inodes.i[0].nlinks = 2;
+  part[minor]->fs.inodes.i[0].fsize = 0;
+  part[minor]->fs.inodes.i[0].blockrefs[0] = part[minor]->fs.sblock.super.firstblock;
 
-  dirent_t *rootdir = (dirent_t*) part->block[part->fs.inodes.i[0].blockrefs[0]].mem;
+  dirent_t *rootdir = (dirent_t*) part[minor]->block[part[minor]->fs.inodes.i[0].blockrefs[0]].mem;
   rootdir[0].inum = 1; // first inode starts with 1 not 0
   strncpy(rootdir[0].name, ".", DIRNAMEENTRY);
   rootdir[1].inum = 1; // first inode starts with 1 not 0
   strncpy(rootdir[1].name, "..", DIRNAMEENTRY);
 
-  byte_t *bmap = part->block[part->fs.sblock.super.bbitmap].mem;
+  byte_t *bmap = part[minor]->block[part[minor]->fs.sblock.super.bbitmap].mem;
   bmap[0] = 0x3F;  // first 6 bits of bitmap are set, 6 blocks are used
 }
 
 void tstdisk_close(ldevminor_t minor)
 {
   ASSERT(minor < 1);
-  if (part)
-    free(part);
+  if (part[minor])
+    free(part[minor]);
 }
 
 void tstdisk_strategy(ldevminor_t minor, bhead_t *bh)
@@ -149,10 +157,10 @@ void tstdisk_strategy(ldevminor_t minor, bhead_t *bh)
   }
 
   if (wr) {
-    testdiskwrite(bh->buf->mem, bh->block);
+    testdiskwrite(bh->buf->mem, minor, bh->block);
     bh->written = true;
   } else {
-    testdiskread(bh->buf->mem, bh->block);
+    testdiskread(bh->buf->mem, minor, bh->block);
     bh->valid = true;
   }
   

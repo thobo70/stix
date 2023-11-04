@@ -24,7 +24,7 @@
 
 extern process_t *active;
 
-char *tstdisk_getblock(block_t bidx);
+char *tstdisk_getblock(ldevminor_t minor, block_t bidx);
 
 extern bdev_t tstdisk;
 
@@ -110,7 +110,7 @@ static void test_buffer_pass(void) {
   b->dwrite = false;    // write to disk immediately
   bwrite(b);
   brelse(b);
-  CU_ASSERT_EQUAL(strcmp(tstdisk_getblock(0), str), 0);
+  CU_ASSERT_EQUAL(strcmp(tstdisk_getblock(0, 0), str), 0);
 }
  
 
