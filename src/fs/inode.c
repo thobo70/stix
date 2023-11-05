@@ -435,13 +435,14 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
 
 
 /**
- * @brief finds inode which path points to
+ * @brief finds inode which path points to and returns inode and parent inode id
  * 
  * @param p           file path
- * @return iinode_t*  inode
+ * @return namei_t    inode and parent inode id
  */
-iinode_t *namei(const char *p)
+namei_t namei(const char *p)
 {
+  namei_t rtn = {NULL, 0};
   iinode_t *wi = NULL;    // working inode
   dword_t i, n;           // index and number of directory entries 
   int ps;                 // size of current path name part
@@ -459,21 +460,22 @@ iinode_t *namei(const char *p)
   } else
     wi = iget(active->u->workdir->fs, active->u->workdir->inum);
   if (!wi)
-    return NULL;
+    return rtn;
 
+  rtn.p = wi->inum;
   n = snlen(p, DIRNAMEENTRY);
   while (*p)  {
     for ( ps = 0 ; p[ps] && (p[ps] != '/') ; ++ps );
     if (ps > DIRNAMEENTRY) {
       /// @todo path name too long error
       iput(wi);
-      return NULL;
+      return rtn;
     }
     if ((sncmp(p, "..", n) != 0) || (wi != active->u->fsroot)) {  // if *p is ".." and wi is root then continue
       if (wi->dinode.ftype != DIRECTORY) {
         /// @todo set error no dir
         iput(wi);
-        return NULL;
+        return rtn;
       }
       /// @todo check permission
       n = wi->dinode.fsize / sizeof(dirent_t);
@@ -485,6 +487,7 @@ iinode_t *namei(const char *p)
         bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
         de = (dirent_t*)&bh->buf->mem[bm.offblock];
         if (sncmp(p, de->name, ps) == 0) {
+          rtn.p = wi->inum;
           iput(wi);
           wi = iget(fs, de->inum);
           found = true;
@@ -494,7 +497,7 @@ iinode_t *namei(const char *p)
       if (!found) {
         /// @todo error entry not found
         iput(wi);
-        return NULL;
+        return rtn;
       }
     }
     p += ps;
@@ -502,5 +505,6 @@ iinode_t *namei(const char *p)
       ++p;
   }
   
-  return wi;
+  rtn.i = wi;
+  return rtn;
 }

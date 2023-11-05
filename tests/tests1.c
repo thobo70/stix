@@ -131,7 +131,7 @@ static void test_block_pass(void) {
 
 
 static void test_inode_pass(void) {
-  iinode_t *i;
+  namei_t i;
   active->u->fsroot = iget(0, 1);
   CU_ASSERT_PTR_NOT_NULL_FATAL(active->u->fsroot);
   active->u->workdir = iget(0, 1);
@@ -139,25 +139,25 @@ static void test_inode_pass(void) {
   CU_ASSERT_EQUAL(active->u->fsroot, active->u->workdir);
   CU_ASSERT_EQUAL(active->u->fsroot->nref, 2);
   i = namei("/.");
-  CU_ASSERT_PTR_NOT_NULL_FATAL(i);
-  iput(i);
-  CU_ASSERT_EQUAL(i, active->u->fsroot);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(i.i);
+  iput(i.i);
+  CU_ASSERT_EQUAL(i.i, active->u->fsroot);
   i = namei(".");
-  CU_ASSERT_PTR_NOT_NULL_FATAL(i);
-  iput(i);
-  CU_ASSERT_EQUAL(i, active->u->fsroot);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(i.i);
+  iput(i.i);
+  CU_ASSERT_EQUAL(i.i, active->u->fsroot);
   i = namei("/..");
-  CU_ASSERT_PTR_NOT_NULL_FATAL(i);
-  iput(i);
-  CU_ASSERT_EQUAL(i, active->u->fsroot);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(i.i);
+  iput(i.i);
+  CU_ASSERT_EQUAL(i.i, active->u->fsroot);
   i = namei("..");
-  CU_ASSERT_PTR_NOT_NULL_FATAL(i);
-  iput(i);
-  CU_ASSERT_EQUAL(i, active->u->fsroot);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(i.i);
+  iput(i.i);
+  CU_ASSERT_EQUAL(i.i, active->u->fsroot);
   i = namei("/");
-  CU_ASSERT_PTR_NOT_NULL_FATAL(i);
-  iput(i);
-  CU_ASSERT_EQUAL(i, active->u->fsroot);
+  CU_ASSERT_PTR_NOT_NULL_FATAL(i.i);
+  iput(i.i);
+  CU_ASSERT_EQUAL(i.i, active->u->fsroot);
   CU_ASSERT_EQUAL(active->u->fsroot->nref, 2);
 }
 

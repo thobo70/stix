@@ -22,13 +22,13 @@
 #define STARTREFSLEVEL 18   ///< index of start of reference levels > 0
 
 enum ftype {
-  IUNSPEC = 0,
-  IFREE,
+  IFREE = 0,
   REGULAR,
   DIRECTORY,
   CHARACTER,
   BLOCK,
-  FIFO
+  FIFO,
+  IUNSPEC
 };
 
 typedef word_t ftype_t;
@@ -43,7 +43,10 @@ typedef struct dinode_t {
   utime_t tinode;
   nlinks_t nlinks;
   fsize_t fsize;
-  block_t blockrefs[NBLOCKREFS];
+  union {
+    block_t blockrefs[NBLOCKREFS];
+    ldev_t ldev;
+  };
 } dinode_t;
 
 /// @brief in core inode
@@ -70,6 +73,11 @@ typedef struct bmap_t {
   block_t rdablock;
 } bmap_t;
 
+typedef struct namei_t {
+  iinode_t *i;
+  ninode_t p;
+} namei_t;
+
 #define NINODESBLOCK  ((block_t)( BLOCKSIZE / sizeof(dinode_t) ))
 
 
@@ -95,6 +103,6 @@ iinode_t *iget(fsnum_t fs, ninode_t inum);
  */
 void iput(iinode_t *inode);
 
-iinode_t *namei(const char *p);
+namei_t namei(const char *p);
 
 #endif
