@@ -383,7 +383,7 @@ void iput(iinode_t *inode)
 
 
 /**
- * @brief mapping from file position to block in fs
+ * @brief mapping from file position to block in fs and allocates new blocks if necessary
  * 
  * @param inode 
  * @param pos 
@@ -394,12 +394,21 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
   ASSERT(inode);
   bmap_t bm;
   block_t lblock = pos / BLOCKSIZE;
+  bm.fsblock = 0;
   bm.offblock = pos % BLOCKSIZE;
   bm.nbytesleft = BLOCKSIZE - bm.offblock;
   bm.rdablock = 0;
 
   if (lblock < STARTREFSLEVEL) {
     bm.fsblock = inode->dinode.blockrefs[lblock];
+    if (bm.fsblock == 0) {    // allocate new block
+      bhead_t *bh = balloc(inode->fs);
+      if (bh == NULL)
+        return bm;      
+      bm.fsblock = inode->dinode.blockrefs[lblock] = bh->block;
+      inode->modified = true;
+      brelse(bh);
+    }
     bm.rdablock = inode->dinode.blockrefs[lblock + 1];
     return bm;
   }
@@ -416,14 +425,34 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
   }
 
   block_t b = inode->dinode.blockrefs[STARTREFSLEVEL + l];
+  if (b == 0) {    // allocate new block
+    bhead_t *bh = balloc(inode->fs);
+    if (bh == NULL)
+      return bm;      
+    b = inode->dinode.blockrefs[STARTREFSLEVEL + l] = bh->block;
+    inode->modified = true;
+    brelse(bh);
+  }
   do {
     bhead_t *bh = bread(LDEVFROMFS(inode->fs), b);
     block_t *refs = (block_t *)bh->buf->mem;
     int idx = lblock / d;
-    b = refs[idx++];
-    brelse(bh);
-    if (idx < NREFSPERBLOCK)
+    ASSERT(idx < NREFSPERBLOCK);
+    b = refs[idx];
+    if (b == 0) {    // allocate new block
+      bhead_t *bha = balloc(inode->fs);
+      if (bha == NULL) {
+        brelse(bh);
+        return bm;
+      }
+      b = refs[idx] = bha->block;
+      brelse(bha);
+      bh->dwrite = true;
+      bwrite(bh);
+    }
+    if (++idx < NREFSPERBLOCK)
       bm.rdablock = refs[idx];
+    brelse(bh);
     lblock %= d;
     d /= NREFSPERBLOCK;
   } while (d > 0);
@@ -484,6 +513,10 @@ namei_t namei(const char *p)
       for ( i = 0 ; !found && i < n ; ++i ) {
         /// @todo optimize algorithm, is quick and dirty
         bm = bmap(wi, i * sizeof(dirent_t));
+        if (bm.fsblock == 0) {  // no block assigned, error should be set by balloc in bmap
+          iput(wi);
+          return rtn;
+        }
         bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
         de = (dirent_t*)&bh->buf->mem[bm.offblock];
         if (sncmp(p, de->name, ps) == 0) {
