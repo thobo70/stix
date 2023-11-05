@@ -16,7 +16,6 @@
 #include "utils.h"
 
 #define SUPERBLOCKINODE(fs)  (getisblock(fs)->dsblock.inodes)   ///< first block with inodes in fs
-#define LDEVFROMFS(fs)  (getisblock(fs)->dev)        ///< ldev of fs from super block
 
 #define HTABSIZEBITS 4
 
@@ -50,8 +49,9 @@ void freeblocklevel(int level, fsnum_t fs, block_t bl)
     --level;
     bhead_t *b = bread(LDEVFROMFS(fs), bl);
     block_t *brefs = (block_t *)b->buf->mem;
-    for ( int i = 0 ; (i < NREFSPERBLOCK) && brefs[i] ; ++i )
-      freeblocklevel(level, fs, brefs[i]);
+    for ( int i = 0 ; (i < NREFSPERBLOCK) ; ++i )
+      if (brefs[i])
+        freeblocklevel(level, fs, brefs[i]);
     brelse(b);
   }
   bfree(fs, bl);
@@ -285,8 +285,8 @@ void ifree(iinode_t *inode)
   }
   isbk->locked = true;
 
-  if (isbk->nfblocks >= NFREEINODES) {
-    isbk->nfblocks = NFREEBLOCKS - 1;
+  if (isbk->nfinodes >= NFREEINODES) {
+    isbk->nfinodes = NFREEINODES - 1;
     isbk->finode[isbk->nfinodes] = inode->inum;
   } else if ((isbk->nfinodes == 0) || (isbk->finode[isbk->nfinodes] < inode->inum)) {
     int d = 0, j = 0;

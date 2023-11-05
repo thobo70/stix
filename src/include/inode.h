@@ -21,6 +21,9 @@
 #define NBLOCKREFS 20       ///< number of block references in inode
 #define STARTREFSLEVEL 18   ///< index of start of reference levels > 0
 
+#define LDEVFROMFS(fs)  (getisblock(fs)->dev)        ///< ldev of fs from super block
+#define LDEVFROMINODE(i)  (getisblock(i->fs)->dev)   ///< ldev of fs from inode
+
 enum ftype {
   IFREE = 0,
   REGULAR,
@@ -104,5 +107,6 @@ iinode_t *iget(fsnum_t fs, ninode_t inum);
 void iput(iinode_t *inode);
 
 namei_t namei(const char *p);
+bmap_t bmap(iinode_t *inode, fsize_t pos);
 
 #endif
