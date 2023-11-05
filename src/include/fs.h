@@ -17,6 +17,7 @@
 
 #define MAXFS 6
 #define DIRNAMEENTRY 14
+#define MAXPATH 256
 
 typedef struct dirent_t {
   ninode_t inum;

@@ -17,6 +17,20 @@
 #include "buf.h"
 
 
+
+const char *basename(const char *path)
+{
+  ASSERT(path);
+  const char *p = path + snlen(path, MAXPATH);
+  while (p > path && *p != '/')
+    p--;
+  if (*p == '/')
+    p++;
+  return p;
+}
+
+
+
 void unlink(const char *path)
 {
   ASSERT(path != NULL);
