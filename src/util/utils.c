@@ -36,6 +36,14 @@ void sncpy(char *dst, const char *src, sizem_t n)
   strncpy(dst, src, n);
 }
 
+void snapnd(char *dst, const char *src, sizem_t n)
+{
+  sizem_t i = 0;
+  while (i < n && dst[i])
+    ++i;
+  sncpy(dst + i, src, n - i);
+}
+
 /**
  * @brief returns length of string s but maximum of mlen
  * 

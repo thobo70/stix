@@ -101,7 +101,7 @@ void linki(iinode_t *ii, const char *newpath)
       return;
     }
     bhead_t *bh = bread(LDEVFROMINODE(pi), b.fsblock);
-    dirent_t *de = (dirent_t *)bh->buf->mem;
+    dirent_t *de = (dirent_t *)&bh->buf->mem[b.offblock];
     if (de->inum == 0) {
       de->inum = ii->inum;
       sncpy(de->name, basename(newpath), sizeof(DIRNAMEENTRY));
@@ -114,9 +114,11 @@ void linki(iinode_t *ii, const char *newpath)
         pi->dinode.fsize += sizeof(dirent_t);
         pi->modified = true;
       }
+      /// @todo reset error if necessary
       break;
     }
   }
+  iput(pi);
 }
 
 
@@ -139,6 +141,8 @@ void link(const char *path, const char *newpath)
 
 void mkdir(const char *path)
 {
+  char sbuf[MAXPATH];
+
   ASSERT(path != NULL);
   namei_t in = namei(path);
   if (in.i != NULL)
@@ -149,11 +153,24 @@ void mkdir(const char *path)
   }
   if (in.p == 0)    // parent dir not found
     return;   // error already set by namei
+  iinode_t *pi = iget(in.fs, in.p);
+  if (pi == NULL)
+    return;   // error already set by iget
 
   iinode_t *ii = ialloc(in.fs, DIRECTORY);
   if (ii == NULL) 
     return;   // error already set by ialloc
 
   linki(ii, path);
+  sncpy(sbuf, path, MAXPATH);
+  snapnd(sbuf,"/.", MAXPATH);
+  linki(ii, sbuf);
+  sncpy(sbuf, path, MAXPATH);
+  snapnd(sbuf,"/..", MAXPATH);
+  linki(pi, sbuf);
   iput(ii);
+  iput(pi);
 }
+
+
+

@@ -25,6 +25,8 @@ void mset(void *s, int c, sizem_t n);
 
 int sncmp(const char *s1, const char *s2, sizem_t n);
 void sncpy(char *dst, const char *src, sizem_t n);
+void snapnd(char *dst, const char *src, sizem_t n);
+
 sizem_t snlen(const char *s, sizem_t mlen);
 
 void panic(const char *t, ...);
