@@ -79,6 +79,7 @@ typedef struct bmap_t {
 typedef struct namei_t {
   iinode_t *i;
   ninode_t p;
+  fsnum_t fs;
 } namei_t;
 
 #define NINODESBLOCK  ((block_t)( BLOCKSIZE / sizeof(dinode_t) ))
@@ -89,6 +90,10 @@ typedef struct namei_t {
  * 
  */
 void init_inodes(void);
+
+iinode_t *ialloc(fsnum_t fs, ftype_t ftype);
+void ifree(iinode_t *inode);
+
 
 /**
  * @brief searches inode in hashlist or sets up a new one

@@ -78,22 +78,28 @@ void linki(iinode_t *ii, const char *newpath)
   ASSERT(newpath);
 
   namei_t in = namei(newpath);
-  if (in.i != NULL)
+  if (in.i != NULL) {
     iput(in.i);
-  if (in.i == NULL) {
     /// @todo error link already exists
     return;
   }
   if (in.p == 0)    // parent dir not found
     return;   // error already set by namei
-  iinode_t *pi = iget(in.i->fs, in.p);
+  if (ii->fs != in.fs) {
+    /// @todo error different file systems
+    return;
+  }
+  iinode_t *pi = iget(in.fs, in.p);
   ASSERT(pi != NULL);
   ASSERT(pi->dinode.ftype == DIRECTORY);
   ASSERT(pi->dinode.fsize % sizeof(dirent_t) == 0);
   int n = pi->dinode.fsize / sizeof(dirent_t);
-  for (int i = 0; i < n; i++) {
+  for (int i = 0; i <= n; i++) {  // find free entry, therefore <= n, if no unused entry found, i == n and bmap will allocate a new block if necessary
     bmap_t b = bmap(pi, i * sizeof(dirent_t));
-    ASSERT(b.fsblock != 0);
+    if (b.fsblock == 0) {  // no new blocks left on device
+      iput(pi);
+      return;
+    }
     bhead_t *bh = bread(LDEVFROMINODE(pi), b.fsblock);
     dirent_t *de = (dirent_t *)bh->buf->mem;
     if (de->inum == 0) {
@@ -104,6 +110,10 @@ void linki(iinode_t *ii, const char *newpath)
       bh->dwrite = true;
       bwrite(bh);
       brelse(bh);
+      if (i == n) { // new directory entry
+        pi->dinode.fsize += sizeof(dirent_t);
+        pi->modified = true;
+      }
       break;
     }
   }
@@ -123,4 +133,27 @@ void link(const char *path, const char *newpath)
   }
   linki(in.i, newpath);
   iput(in.i);
+}
+
+
+
+void mkdir(const char *path)
+{
+  ASSERT(path != NULL);
+  namei_t in = namei(path);
+  if (in.i != NULL)
+    iput(in.i);
+  if (in.i != NULL) {
+    /// @todo error link already exists
+    return;
+  }
+  if (in.p == 0)    // parent dir not found
+    return;   // error already set by namei
+
+  iinode_t *ii = ialloc(in.fs, DIRECTORY);
+  if (ii == NULL) 
+    return;   // error already set by ialloc
+
+  linki(ii, path);
+  iput(ii);
 }

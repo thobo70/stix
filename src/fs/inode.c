@@ -201,9 +201,10 @@ void init_inodes(void)
  * @brief allocates an inode from the fs
  * 
  * @param fs          the fs where to search for a free inode
+ * @param ftype       the type of the inode
  * @return iinode_t*  points to free inode or NULL if an error is set
  */
-iinode_t *ialloc(fsnum_t fs)
+iinode_t *ialloc(fsnum_t fs, ftype_t ftype)
 {
   iinode_t *ii = NULL;
   bhead_t *bhead = NULL;
@@ -249,8 +250,12 @@ iinode_t *ialloc(fsnum_t fs)
       }
     }
     ii = iget(fs, isbk->finode[isbk->nfinodes]);
-    if (!ii)
+    if (!ii) {
+      isbk->locked = false;
+      wakeall(SBLOCKBUSY);
+      /// @todo set error no free inodes in fs
       return NULL;
+    }
     isbk->lastfinode = isbk->finode[isbk->nfinodes++];
     isbk->locked = false;
     wakeall(SBLOCKBUSY);
@@ -260,7 +265,10 @@ iinode_t *ialloc(fsnum_t fs)
       continue;
     }
     mset(&ii->dinode, 0, sizeof(dinode_t));
-    ii->dinode.ftype = IUNSPEC;
+    ii->dinode.ftype = ftype;
+    ii->dinode.nlinks = 0;      // will be incremented by linki
+    /// @todo set uid, gid, mode, ...
+    ii->modified = true;
     update_inode_on_disk(ii);
     return ii;
   }
@@ -471,7 +479,7 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
  */
 namei_t namei(const char *p)
 {
-  namei_t rtn = {NULL, 0};
+  namei_t rtn = {NULL, 0, 0};
   iinode_t *wi = NULL;    // working inode
   dword_t i, n;           // index and number of directory entries 
   int ps;                 // size of current path name part
@@ -523,6 +531,7 @@ namei_t namei(const char *p)
         de = (dirent_t*)&bh->buf->mem[bm.offblock];
         if (sncmp(p, de->name, ps) == 0) {
           rtn.p = wi->inum;       // parent inode
+          rtn.fs = wi->fs;
           iput(wi);
           wi = iget(fs, de->inum);
           found = true;
@@ -530,8 +539,10 @@ namei_t namei(const char *p)
         brelse(bh);
       }
       if (!found) {
-        if (p[ps] == 0)     // file was not found but parent dir was found
-          rtn.p = wi->inum; // parent inode
+        if (p[ps] == 0) {     // file was not found but parent dir was found
+          rtn.p = wi->inum;   // parent inode
+          rtn.fs = wi->fs;
+        }
         /// @todo error entry not found
         iput(wi);
         return rtn;
