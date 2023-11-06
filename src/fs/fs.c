@@ -98,7 +98,7 @@ void linki(iinode_t *ii, const char *newpath)
     dirent_t *de = (dirent_t *)bh->buf->mem;
     if (de->inum == 0) {
       de->inum = ii->inum;
-      sncopy(de->name, basename(newpath), sizeof(DIRNAMEENTRY));
+      sncpy(de->name, basename(newpath), sizeof(DIRNAMEENTRY));
       ii->dinode.nlinks++;
       ii->modified = true;
       bh->dwrite = true;

@@ -31,6 +31,10 @@ int sncmp(const char *s1, const char *s2, sizem_t n)
   return strncmp(s1, s2, n);
 }
 
+void sncpy(char *dst, const char *src, sizem_t n)
+{
+  strncpy(dst, src, n);
+}
 
 /**
  * @brief returns length of string s but maximum of mlen
