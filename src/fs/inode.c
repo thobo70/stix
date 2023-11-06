@@ -483,6 +483,8 @@ namei_t namei(const char *p)
 
   ASSERT(p);
   ASSERT(active);
+  if (*p == 0)
+    return rtn;
   if (*p == '/') {
     wi = iget(active->u->fsroot->fs, active->u->fsroot->inum);
     ++p;
@@ -492,7 +494,6 @@ namei_t namei(const char *p)
     return rtn;
 
   rtn.p = wi->inum;
-  n = snlen(p, DIRNAMEENTRY);
   while (*p)  {
     for ( ps = 0 ; p[ps] && (p[ps] != '/') ; ++ps );
     if (ps > DIRNAMEENTRY) {
@@ -500,13 +501,14 @@ namei_t namei(const char *p)
       iput(wi);
       return rtn;
     }
-    if ((sncmp(p, "..", n) != 0) || (wi != active->u->fsroot)) {  // if *p is ".." and wi is root then continue
+    if ((sncmp(p, "..", ps) != 0) || (wi != active->u->fsroot)) {  // if *p is ".." and wi is root then continue
       if (wi->dinode.ftype != DIRECTORY) {
         /// @todo set error no dir
         iput(wi);
         return rtn;
       }
       /// @todo check permission
+      ASSERT(wi->dinode.fsize % sizeof(dirent_t) == 0);
       n = wi->dinode.fsize / sizeof(dirent_t);
       fs = wi->fs;
       found = false;
@@ -520,7 +522,7 @@ namei_t namei(const char *p)
         bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
         de = (dirent_t*)&bh->buf->mem[bm.offblock];
         if (sncmp(p, de->name, ps) == 0) {
-          rtn.p = wi->inum;
+          rtn.p = wi->inum;       // parent inode
           iput(wi);
           wi = iget(fs, de->inum);
           found = true;
@@ -528,6 +530,8 @@ namei_t namei(const char *p)
         brelse(bh);
       }
       if (!found) {
+        if (p[ps] == 0)     // file was not found but parent dir was found
+          rtn.p = wi->inum; // parent inode
         /// @todo error entry not found
         iput(wi);
         return rtn;
