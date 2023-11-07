@@ -204,7 +204,7 @@ void init_inodes(void)
  * @param ftype       the type of the inode
  * @return iinode_t*  points to free inode or NULL if an error is set
  */
-iinode_t *ialloc(fsnum_t fs, ftype_t ftype)
+iinode_t *ialloc(fsnum_t fs, ftype_t ftype, fmode_t fmode)
 {
   iinode_t *ii = NULL;
   bhead_t *bhead = NULL;
@@ -266,8 +266,9 @@ iinode_t *ialloc(fsnum_t fs, ftype_t ftype)
     }
     mset(&ii->dinode, 0, sizeof(dinode_t));
     ii->dinode.ftype = ftype;
+    ii->dinode.fmode = fmode;
     ii->dinode.nlinks = 0;      // will be incremented by linki
-    /// @todo set uid, gid, mode, ...
+    /// @todo set uid, gid, ...
     ii->modified = true;
     update_inode_on_disk(ii);
     return ii;

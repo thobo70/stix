@@ -91,7 +91,7 @@ typedef struct namei_t {
  */
 void init_inodes(void);
 
-iinode_t *ialloc(fsnum_t fs, ftype_t ftype);
+iinode_t *ialloc(fsnum_t fs, ftype_t ftype, fmode_t fmode);
 void ifree(iinode_t *inode);
 
 

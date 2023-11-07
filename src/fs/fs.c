@@ -182,7 +182,7 @@ void link(const char *path, const char *newpath)
 
 
 
-void mknode(const char *path, ftype_t ftype)
+void mknode(const char *path, ftype_t ftype, fmode_t fmode)
 {
   ASSERT(path != NULL);
   ASSERT(ftype >= REGULAR && ftype <= FIFO);
@@ -198,7 +198,7 @@ void mknode(const char *path, ftype_t ftype)
   if (pi == NULL)
     return;   // error already set by iget
 
-  iinode_t *ii = ialloc(in.fs, ftype);
+  iinode_t *ii = ialloc(in.fs, ftype, fmode);
   if (ii == NULL) {
     iput(pi);
     return;   // error already set by ialloc
@@ -211,10 +211,10 @@ void mknode(const char *path, ftype_t ftype)
 
 
 
-void mkdir(const char *path)
+void mkdir(const char *path, fmode_t fmode)
 {
   ASSERT(path != NULL);
-  mknode(path, DIRECTORY);
+  mknode(path, DIRECTORY, fmode);
   namei_t in = namei(path);
   if (in.i == NULL) {
     /// @todo error link does not exists
@@ -295,3 +295,4 @@ void rmdir(const char *path)
   unlinki(pi, basename(path));
   iput(pi);
 }
+
