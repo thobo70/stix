@@ -45,6 +45,7 @@ CU_SUITE_SETUP() {
   ddinit();
   init_buffers();
   init_inodes();
+  init_fs(); 
   bdevopen((ldev_t){{0, 0}});
   return CUE_SUCCESS;
 }
@@ -164,6 +165,8 @@ static void test_inode_pass(void) {
 
 
 static void test_file_pass(void) {
+  CU_ASSERT_EQUAL(mkdir("/test", 0777), 0);
+  CU_ASSERT_EQUAL(rmdir("/test"), 0);
 }
  
 

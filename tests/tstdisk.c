@@ -121,7 +121,7 @@ void tstdisk_open(ldevminor_t minor)
 
   part[minor]->fs.inodes.i[0].ftype = DIRECTORY;
   part[minor]->fs.inodes.i[0].nlinks = 2;
-  part[minor]->fs.inodes.i[0].fsize = 0;
+  part[minor]->fs.inodes.i[0].fsize = 2 * sizeof(dirent_t);
   part[minor]->fs.inodes.i[0].blockrefs[0] = part[minor]->fs.sblock.super.firstblock;
 
   dirent_t *rootdir = (dirent_t*) part[minor]->block[part[minor]->fs.inodes.i[0].blockrefs[0]].mem;

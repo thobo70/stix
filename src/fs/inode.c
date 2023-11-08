@@ -213,7 +213,7 @@ iinode_t *ialloc(fsnum_t fs, ftype_t ftype, fmode_t fmode)
   ASSERT(fs < MAXFS);
 
   isuperblock_t *isbk = getisblock(fs);
-  block_t firstinodeblock = SUPERBLOCKINODE(fs);
+  // block_t firstinodeblock = SUPERBLOCKINODE(fs);
   block_t currblk = 0;
 
   for(;;) {
@@ -229,8 +229,8 @@ iinode_t *ialloc(fsnum_t fs, ftype_t ftype, fmode_t fmode)
       do {
         if (++iidx >= isbk->dsblock.ninodes)
           break;
-        if (!bhead || (currblk != INODEBLOCK(iidx, firstinodeblock))) {
-          currblk = INODEBLOCK(iidx, firstinodeblock);
+        if (!bhead || (currblk != INODEBLOCK(fs, iidx))) {
+          currblk = INODEBLOCK(fs, iidx);
           if (bhead)
             brelse(bhead);
           bhead = breada(LDEVFROMFS(fs), currblk, currblk + 1);
@@ -356,7 +356,7 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
     }
     remove_inode_from_freelist(found);
     move_inode_to_hashqueue(found, fs, inum);
-    bhead = bread(LDEVFROMFS(found->fs), INODEBLOCK(inum, SUPERBLOCKINODE(fs)));
+    bhead = bread(LDEVFROMFS(found->fs), INODEBLOCK(fs, inum));
     mcpy(&found->dinode, &bhead->buf->mem[INODEOFFSET(inum)], sizeof(dinode_t));
     brelse(bhead);
     found->nref = 1;
