@@ -174,7 +174,7 @@ int linki(iinode_t *ii, const char *newpath)
     dirent_t *de = (dirent_t *)&bh->buf->mem[b.offblock];
     if (de->inum == 0) {
       de->inum = ii->inum;
-      sncpy(de->name, basename(newpath), sizeof(DIRNAMEENTRY));
+      sncpy(de->name, basename(newpath), DIRNAMEENTRY);
       while (ii->locked) {
         waitfor(INODELOCKED);
       }
@@ -368,7 +368,6 @@ int open(const char *fname, omode_t omode, fmode_t fmode)
         return -1;
       }
     } else {
-      iput(in.i);
       return -1;   // error already set by namei
     }
   }
@@ -411,7 +410,10 @@ int open(const char *fname, omode_t omode, fmode_t fmode)
 
 int close(int fdesc)
 {
-  ASSERT(fdesc >= 0 && fdesc < MAXOPENFILES);
+  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
   ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   putftabent(fdesc);
   active->u->fdesc[fdesc].ftabent = NULL;
@@ -423,11 +425,11 @@ int close(int fdesc)
 int write(int fdesc, byte_t *buf, fsize_t nbytes)
 {
   int written = 0;
-  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   if (fdesc < 0 || fdesc >= MAXOPENFILES) {
     /// @todo error invalid file descriptor
     return -1;
   }
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   if (buf == NULL) {
     /// @todo error invalid buffer
     return -1;
@@ -489,11 +491,11 @@ int write(int fdesc, byte_t *buf, fsize_t nbytes)
 int read(int fdesc, byte_t *buf, fsize_t nbytes)
 {
   int read = 0;
-  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   if (fdesc < 0 || fdesc >= MAXOPENFILES) {
     /// @todo error invalid file descriptor
     return -1;
   }
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   if (buf == NULL) {
     /// @todo error invalid buffer
     return -1;

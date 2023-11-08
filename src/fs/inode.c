@@ -530,7 +530,7 @@ namei_t namei(const char *p)
         }
         bh = breada(LDEVFROMFS(fs), bm.fsblock, bm.rdablock);
         de = (dirent_t*)&bh->buf->mem[bm.offblock];
-        if (sncmp(p, de->name, ps) == 0) {
+        if (de->inum > 0 && sncmp(p, de->name, ps) == 0) {
           rtn.p = wi->inum;       // parent inode
           rtn.fs = wi->fs;
           iput(wi);

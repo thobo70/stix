@@ -167,6 +167,24 @@ static void test_inode_pass(void) {
 static void test_file_pass(void) {
   CU_ASSERT_EQUAL(mkdir("/test", 0777), 0);
   CU_ASSERT_EQUAL(rmdir("/test"), 0);
+
+  CU_ASSERT_EQUAL(mkdir("/test", 0777), 0);
+
+  const char *str = "Hello World";
+  char buf[100];
+  int fd = open("/test/test.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_EQUAL(fd, 0);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)str, strlen(str) + 1), (int)strlen(str) + 1);
+  CU_ASSERT_EQUAL(close(fd), 0);
+
+  fd = open("/test/test.txt", ORDWR, 0777);
+  CU_ASSERT_EQUAL(fd, 0);
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(str) + 1), (int)strlen(str) + 1);
+  CU_ASSERT_EQUAL(strcmp(buf, str), 0);
+  CU_ASSERT_EQUAL(close(fd), 0);
+
+  CU_ASSERT_EQUAL(unlink("/test/test.txt"), 0);
+  CU_ASSERT_EQUAL(rmdir("/test"), 0);
 }
  
 

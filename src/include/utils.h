@@ -15,7 +15,7 @@
 #include "tdefs.h"
 
 #ifndef NDEBUG
-#define ASSERT(a) if (!(a)) panic(#a " is 0/false in %s[Ln %d]\n", __FILE__, __LINE__)
+#define ASSERT(a) if (!(a)) panic("\n" #a " is 0/false in %s[Ln %d]\n", __FILE__, __LINE__)
 #else
 #define ASSERT(s)
 #endif
