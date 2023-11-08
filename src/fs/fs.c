@@ -399,3 +399,14 @@ int open(const char *fname, omode_t omode, fmode_t fmode)
   active->u->fdesc[fdesc].omode = omode;
   return fdesc;
 }
+
+
+
+void close(int fdesc)
+{
+  ASSERT(fdesc >= 0 && fdesc < MAXOPENFILES);
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
+  putftabent(fdesc);
+  active->u->fdesc[fdesc].ftabent = NULL;
+}
+
