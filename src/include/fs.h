@@ -47,6 +47,30 @@ typedef struct filetab_t {
   int flags;
 } filetab_t;
 
+void init_fs(void);
+int mknode(const char *path, ftype_t ftype, fmode_t fmode);
+int open(const char *fname, omode_t omode, fmode_t fmode);
+int close(int fd);
+int read(int fdesc, byte_t *buf, fsize_t nbytes);
+int write(int fdesc, byte_t *buf, fsize_t nbytes);
+// int seek(int fd, fsize_t offset, int whence);
+int unlink(const char *path);
+int mkdir(const char *path, fmode_t fmode);
+int rmdir(const char *path);
+int link(const char *oldpath, const char *newpath);
+// int rename(const char *oldpath, const char *newpath);
+// int stat(const char *path, stat_t *buf);
+// int fstat(int fd, stat_t *buf);
+// int chdir(const char *path);
+// int getcwd(char *buf, size_t size);
+// int mount(const char *dev, const char *path, const char *fs);
+// int umount(const char *path);
+// int opendir(const char *path);
+// int closedir(int fd);
+// int readdir(int fd, dirent_t *buf);
+// int fsync(int fd);
+// int ftruncate(int fd, fsize_t length);
+// int truncate(const char *path, fsize_t length);
 
 
 #endif

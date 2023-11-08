@@ -75,7 +75,7 @@ const char *basename(const char *path)
 }
 
 
-void unlinki(iinode_t *ipdir, const char *bname)
+int unlinki(iinode_t *ipdir, const char *bname)
 {
   ASSERT(ipdir);
   ASSERT(bname);
@@ -92,7 +92,7 @@ void unlinki(iinode_t *ipdir, const char *bname)
       iinode_t *ii = iget(ipdir->fs, de->inum);
       if (ii == NULL) {
         brelse(bh);
-        return;
+        return -1;   // error already set by iget
       }
       while(ii->locked) {
         waitfor(INODELOCKED);
@@ -111,36 +111,38 @@ void unlinki(iinode_t *ipdir, const char *bname)
     }
     brelse(bh);
   }
+  return 0;
 }
 
 
 
-void unlink(const char *path)
+int unlink(const char *path)
 {
   ASSERT(path != NULL);
   namei_t in = namei(path);
   if (in.i == NULL || in.p == 0) {
     if (in.i != NULL)
       iput(in.i);
-    return;
+    return -1;   // error already set by namei
   }
   if (in.i->dinode.ftype == DIRECTORY) {
     /// @todo error is directory
     iput(in.i);
-    return;
+    return -1;
   }
   iput(in.i);
   iinode_t *pi = iget(in.fs, in.p);
   if (pi == NULL)
-    return;   // error already set by iget
+    return -1;   // error already set by iget
   ASSERT(pi->dinode.ftype == DIRECTORY);
-  unlinki(pi, basename(path));
+  int rtn = unlinki(pi, basename(path));
   iput(pi);
+  return rtn;
 }
 
 
 
-void linki(iinode_t *ii, const char *newpath)
+int linki(iinode_t *ii, const char *newpath)
 {
   ASSERT(ii);
   ASSERT(newpath);
@@ -149,13 +151,13 @@ void linki(iinode_t *ii, const char *newpath)
   if (in.i != NULL) {
     iput(in.i);
     /// @todo error link already exists
-    return;
+    return -1;
   }
   if (in.p == 0)    // parent dir not found
-    return;   // error already set by namei
+    return -1;   // error already set by namei
   if (ii->fs != in.fs) {
     /// @todo error different file systems
-    return;
+    return -1;
   }
   iinode_t *pi = iget(in.fs, in.p);
   ASSERT(pi != NULL);
@@ -166,7 +168,7 @@ void linki(iinode_t *ii, const char *newpath)
     bmap_t b = bmap(pi, i * sizeof(dirent_t));
     if (b.fsblock == 0) {  // no new blocks left on device
       iput(pi);
-      return;
+      return -1;
     }
     bhead_t *bh = bread(LDEVFROMINODE(pi), b.fsblock);
     dirent_t *de = (dirent_t *)&bh->buf->mem[b.offblock];
@@ -200,11 +202,12 @@ void linki(iinode_t *ii, const char *newpath)
     brelse(bh);
   }
   iput(pi);
+  return 0;
 }
 
 
 
-void link(const char *path, const char *newpath)
+int link(const char *path, const char *newpath)
 {
   ASSERT(path != NULL);
   ASSERT(newpath != NULL);
@@ -212,21 +215,22 @@ void link(const char *path, const char *newpath)
   if (in.i == NULL || in.p == 0) {
     if (in.i != NULL)
       iput(in.i);
-    return;   // error already set by namei
+    return -1;   // error already set by namei
   }
   if (in.i->dinode.ftype == DIRECTORY) {
     /// @todo error is directory
     iput(in.i);
-    return;
+    return -1;
   }
   
-  linki(in.i, newpath);
+  int rtn = linki(in.i, newpath);
   iput(in.i);
+  return rtn;
 }
 
 
 
-void mknode(const char *path, ftype_t ftype, fmode_t fmode)
+int mknode(const char *path, ftype_t ftype, fmode_t fmode)
 {
   ASSERT(path != NULL);
   ASSERT(ftype >= REGULAR && ftype <= FIFO);
@@ -234,48 +238,49 @@ void mknode(const char *path, ftype_t ftype, fmode_t fmode)
   if (in.i != NULL) {
     iput(in.i);
     /// @todo error link already exists
-    return;
+    return -1;
   }
   if (in.p == 0)    // parent dir not found
-    return;   // error already set by namei
+    return -1;   // error already set by namei
   iinode_t *pi = iget(in.fs, in.p);
   if (pi == NULL)
-    return;   // error already set by iget
+    return -1;   // error already set by iget
 
   iinode_t *ii = ialloc(in.fs, ftype, fmode);
   if (ii == NULL) {
     iput(pi);
-    return;   // error already set by ialloc
+    return -1;   // error already set by ialloc
   }
 
-  linki(ii, path);
+  int rtn = linki(ii, path);
   iput(ii);
   iput(pi);
+  return rtn;
 }
 
 
 
-void mkdir(const char *path, fmode_t fmode)
+int mkdir(const char *path, fmode_t fmode)
 {
   ASSERT(path != NULL);
   mknode(path, DIRECTORY, fmode);
   namei_t in = namei(path);
   if (in.i == NULL) {
     /// @todo error link does not exists
-    return;
+    return -1;
   }
   if (in.p == 0)    // parent dir not found
-    return;   // error already set by namei
+    return -1;   // error already set by namei
   iinode_t *pi = iget(in.fs, in.p);
   if (pi == NULL)
-    return;   // error already set by iget
+    return -1;   // error already set by iget
 
   bmap_t b = bmap(in.i, 0);
   if (b.fsblock == 0) {  // no new blocks left on device
     unlinki(pi, basename(path));
     iput(in.i);
     iput(pi);
-    return;
+    return -1;
   }
   bhead_t *bh = bread(LDEVFROMINODE(in.i), b.fsblock);
   dirent_t *de = (dirent_t *)bh->buf->mem;
@@ -305,39 +310,41 @@ void mkdir(const char *path, fmode_t fmode)
   brelse(bh);
   iput(in.i);
   iput(pi);
+  return 0;
 }
 
 
 
-void rmdir(const char *path)
+int rmdir(const char *path)
 {
   ASSERT(path != NULL);
   namei_t in = namei(path);
   if (in.i == NULL || in.p == 0) {
     if (in.i != NULL)
       iput(in.i);
-    return;   // error already set by namei
+    return -1;   // error already set by namei
   }
   if (in.i->dinode.ftype != DIRECTORY) {
     /// @todo error is not directory
     iput(in.i);
-    return;
+    return -1;
   }
   if (in.i->dinode.nlinks > 3) {
     /// @todo error directory not empty
     iput(in.i);
-    return;
+    return -1;
   }
   iinode_t *pi = iget(in.fs, in.p);
   if (pi == NULL) {
     iput(in.i);
-    return;   // error already set by iget
+    return -1;   // error already set by iget
   }
   unlinki(in.i, ".");
   unlinki(in.i, "..");
   iput(in.i);
-  unlinki(pi, basename(path));
+  int rtn = unlinki(pi, basename(path));
   iput(pi);
+  return rtn;
 }
 
 
@@ -402,12 +409,13 @@ int open(const char *fname, omode_t omode, fmode_t fmode)
 
 
 
-void close(int fdesc)
+int close(int fdesc)
 {
   ASSERT(fdesc >= 0 && fdesc < MAXOPENFILES);
   ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   putftabent(fdesc);
   active->u->fdesc[fdesc].ftabent = NULL;
+  return 0;
 }
 
 
