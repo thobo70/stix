@@ -18,8 +18,6 @@ process_t *waitforq[NQUEUES];
 
 process_t *active = NULL;
 
-
-
 void waitfor(waitfor_t w)
 {
   ASSERT(w < NQUEUES);

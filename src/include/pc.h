@@ -13,6 +13,7 @@
 
 #include "tdefs.h"
 #include "inode.h"
+#include "fs.h"
 
 enum waitfor {
   RUNHIGH,
@@ -31,11 +32,62 @@ enum waitfor {
 
 typedef enum waitfor waitfor_t;
 
+/*
+typedef enum errno_t {
+  EPERM = -39,
+  ENOENT,
+  ESRCH,
+  EINTR,
+  EIO,
+  ENXIO,
+  E2BIG,
+  ENOEXEC,
+  EBADF,
+  ECHILD,
+  EAGAIN,
+  ENOMEM,
+  EACCES,
+  EFAULT,
+  ENOTBLK,
+  EBUSY,
+  EEXIST,
+  EXDEV,
+  ENODEV,
+  ENOTDIR,
+  EISDIR,
+  EINVAL,
+  ENFILE,
+  EMFILE,
+  ENOTTY,
+  ETXTBSY,
+  EFBIG,
+  ENOSPC,
+  ESPIPE,
+  EROFS,
+  EMLINK,
+  EPIPE,
+  EDOM,
+  ERANGE,
+  EDEADLK,
+  ENAMETOOLONG,
+  ENOLCK,
+  ENOSYS,
+  ENOTEMPTY,
+  NOERROR = 0,
+} errno_t;
+*/
+typedef int errno_t;
 
+typedef struct fdesctab_t {
+  filetab_t *ftabent;
+  omode_t omode;
+} fdesctab_t;
 
 typedef struct userspace_t {
   iinode_t *fsroot;
   iinode_t *workdir;
+  fdesctab_t fdesc[MAXOPENFILES];
+  errno_t err;
 } u_t;
 
 

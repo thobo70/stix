@@ -114,4 +114,6 @@ void iput(iinode_t *inode);
 namei_t namei(const char *p);
 bmap_t bmap(iinode_t *inode, fsize_t pos);
 
+void free_all_blocks(iinode_t *inode);
+
 #endif

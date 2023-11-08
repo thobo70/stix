@@ -18,6 +18,50 @@
 #include "pc.h"
 
 
+filetab_t filetab[MAXFILETAB];  ///< file table
+
+void init_fs()
+{
+  mset(filetab, 0, sizeof(filetab));
+}
+
+
+int getftabent(iinode_t* ii)
+{
+  ASSERT(ii != NULL);
+  for (int i = 0; i < MAXFILETAB; i++) {
+    if (filetab[i].inode == NULL) {
+      filetab[i].inode = ii;
+      filetab[i].refs = 1;
+      return i;
+    }
+  }
+  return -1;
+}
+
+
+void putftabent(int f)
+{
+  ASSERT(f >= 0 && f < MAXFILETAB);
+  ASSERT(filetab[f].inode != NULL);
+  filetab[f].refs--;
+  if (filetab[f].refs == 0) {
+    iput(filetab[f].inode);
+    filetab[f].inode = NULL;
+    /// @todo potentional race condition if another process is waiting for a free filetab entry
+  }
+} 
+
+int freefdesc(void)
+{
+  for (int i = 0; i < MAXOPENFILES; i++) {
+    if (active->u->fdesc[i].ftabent == NULL) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 
 const char *basename(const char *path)
 {
@@ -296,3 +340,62 @@ void rmdir(const char *path)
   iput(pi);
 }
 
+
+
+int open(const char *fname, omode_t omode, fmode_t fmode)
+{
+  ASSERT(fname != NULL);
+  ASSERT(omode >= OREAD && omode <= OSYNC);
+  int fdesc = freefdesc();
+  if (fdesc < 0) {
+    /// @todo error no free filetab entry
+    return -1;
+  }
+  namei_t in = namei(fname);
+  if (in.i == NULL) {
+    if (omode & OCREATE) {
+      mknode(fname, REGULAR, fmode);
+      in = namei(fname);
+      if (in.i == NULL) {
+        /// @todo error link does not exists
+        return -1;
+      }
+    } else {
+      iput(in.i);
+      return -1;   // error already set by namei
+    }
+  }
+  if (in.i->dinode.ftype == DIRECTORY) {
+    /// @todo error is directory
+    iput(in.i);
+    return -1;
+  }
+  int f = getftabent(in.i);
+  if (f < 0) {
+    iput(in.i);
+    /// @todo error no free filetab entry
+    /// @todo remove node if created
+    return -1;
+  }
+  if (in.i->dinode.ftype == REGULAR) {
+    if (omode & OTRUNC) {
+      while(in.i->locked) {
+        waitfor(INODELOCKED);
+      }
+      in.i->locked = true;
+      free_all_blocks(in.i);
+      in.i->dinode.fsize = 0;
+      in.i->modified = true;
+      in.i->locked = false;
+      wakeall(INODELOCKED);
+    }
+    if (omode & OAPPEND) {
+      filetab[f].offset = in.i->dinode.fsize;
+    } else {
+      filetab[f].offset = 0;
+    }
+  }
+  active->u->fdesc[fdesc].ftabent = &filetab[f];
+  active->u->fdesc[fdesc].omode = omode;
+  return fdesc;
+}
