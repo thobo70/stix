@@ -20,6 +20,9 @@
 #define ASSERT(s)
 #endif
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b)) ///< minimum of a and b
+#define MAX(a, b) ((a) > (b) ? (a) : (b)) ///< maximum of a and b 
+
 void mcpy(void *dst, void *src, sizem_t n);
 void mset(void *s, int c, sizem_t n);
 

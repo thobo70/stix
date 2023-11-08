@@ -410,3 +410,130 @@ void close(int fdesc)
   active->u->fdesc[fdesc].ftabent = NULL;
 }
 
+
+
+int write(int fdesc, byte_t *buf, fsize_t nbytes)
+{
+  int written = 0;
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
+  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
+  if (buf == NULL) {
+    /// @todo error invalid buffer
+    return -1;
+  }
+  if (!(active->u->fdesc[fdesc].omode & OWRITE)) {
+    /// @todo error file not open for writing
+    return -1;
+  }
+  iinode_t *ii = active->u->fdesc[fdesc].ftabent->inode;
+  switch(ii->dinode.ftype) {
+    case REGULAR:
+      while(ii->locked) {
+        waitfor(INODELOCKED);
+      }
+      ii->locked = true;
+      while(nbytes) {
+        bmap_t b = bmap(ii, active->u->fdesc[fdesc].ftabent->offset);
+        if (b.fsblock == 0) {  // no new blocks left on device
+          ii->locked = false;
+          wakeall(INODELOCKED);
+          return written;
+        }
+        bhead_t *bh = bread(LDEVFROMINODE(ii), b.fsblock);
+        sizem_t n = MIN(nbytes, b.nbytesleft);
+        mcpy(&bh->buf->mem[b.offblock], buf, n);
+        bh->dwrite = !(active->u->fdesc[fdesc].omode & OSYNC);
+        bwrite(bh);
+        brelse(bh);
+        nbytes -= n;
+        buf += n;
+        written += n;
+        active->u->fdesc[fdesc].ftabent->offset += n;
+        if (active->u->fdesc[fdesc].ftabent->offset > ii->dinode.fsize) {
+          ii->dinode.fsize = active->u->fdesc[fdesc].ftabent->offset;
+          ii->modified = true;
+        }
+      }
+      ii->modified = true;
+      ii->locked = false;
+      wakeall(INODELOCKED);
+      return written;
+    case CHARACTER:
+      /// @todo error is character device
+      return -1;
+    case BLOCK:
+      /// @todo error is block device
+      return -1;
+    case FIFO:
+      /// @todo error fifo
+      return -1;
+    default:
+      /// @todo error invalid file type
+      return -1;
+  }
+}
+
+
+
+int read(int fdesc, byte_t *buf, fsize_t nbytes)
+{
+  int read = 0;
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
+  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
+  if (buf == NULL) {
+    /// @todo error invalid buffer
+    return -1;
+  }
+  if (!(active->u->fdesc[fdesc].omode & OREAD)) {
+    /// @todo error file not open for reading
+    return -1;
+  }
+  iinode_t *ii = active->u->fdesc[fdesc].ftabent->inode;
+  sizem_t maxleft = ii->dinode.fsize - active->u->fdesc[fdesc].ftabent->offset;
+  nbytes = MIN(nbytes, maxleft);
+  switch(ii->dinode.ftype) {
+    case REGULAR:
+      while(ii->locked) {
+        waitfor(INODELOCKED);
+      }
+      ii->locked = true;
+      while(nbytes) {
+        bmap_t b = bmap(ii, active->u->fdesc[fdesc].ftabent->offset);
+        if (b.fsblock == 0) {  // no new blocks left on device
+          ii->locked = false;
+          wakeall(INODELOCKED);
+          return read;
+        }
+        bhead_t *bh = bread(LDEVFROMINODE(ii), b.fsblock);
+        sizem_t n = MIN(nbytes, b.nbytesleft);
+        mcpy(buf, &bh->buf->mem[b.offblock], n);
+        brelse(bh);
+        nbytes -= n;
+        buf += n;
+        read += n;
+        active->u->fdesc[fdesc].ftabent->offset += n;
+      }
+      ii->locked = false;
+      wakeall(INODELOCKED);
+      return read;
+    case CHARACTER:
+      /// @todo error is character device
+      return -1;
+    case BLOCK:
+      /// @todo error is block device
+      return -1;
+    case FIFO:
+      /// @todo error fifo
+      return -1;
+    default:
+      /// @todo error invalid file type
+      return -1;
+  }
+}
+
