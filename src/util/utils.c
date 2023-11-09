@@ -62,6 +62,18 @@ sizem_t snlen(const char *s, sizem_t mlen)
   return i;
 }
 
+
+void kprintf(const char *t, ...)
+{
+  va_list args;
+
+  va_start(args, t);
+  vprintf(t, args);
+  va_end(args);
+}
+
+
+
 void panic(const char *t, ...)
 {
   va_list args;

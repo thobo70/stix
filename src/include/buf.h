@@ -45,6 +45,7 @@ typedef struct bhead_t {
  * 
  */
 void init_buffers(void);
+void check_bfreelist(void);
 
 
 /**

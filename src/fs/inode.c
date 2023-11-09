@@ -259,17 +259,23 @@ iinode_t *ialloc(fsnum_t fs, ftype_t ftype, fmode_t fmode)
     isbk->lastfinode = isbk->finode[isbk->nfinodes++];
     isbk->locked = false;
     wakeall(SBLOCKBUSY);
-    if ((ii->dinode.ftype != IFREE) || (ii->nref > 1) || (ii->dinode.nlinks > 0)) {
+    if ((ii->dinode.ftype != IFREE) || (ii->nref > 1) || (ii->dinode.nlinks > 0) || (ii->locked)) {
       update_inode_on_disk(ii);
       iput(ii);
       continue;
     }
+    while (ii->locked) {
+      waitfor(INODELOCKED);   /// @todo check if this is necessary
+    }
+    ii->locked = true;
     mset(&ii->dinode, 0, sizeof(dinode_t));
     ii->dinode.ftype = ftype;
     ii->dinode.fmode = fmode;
-    ii->dinode.nlinks = 0;      // will be incremented by linki
+    // ii->dinode.nlinks = 0;      // will be incremented by linki
     /// @todo set uid, gid, ...
     ii->modified = true;
+    ii->locked = false;
+    wakeall(INODELOCKED);
     update_inode_on_disk(ii);
     return ii;
   }

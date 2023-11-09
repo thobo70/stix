@@ -32,6 +32,7 @@ void snapnd(char *dst, const char *src, sizem_t n);
 
 sizem_t snlen(const char *s, sizem_t mlen);
 
+void kprintf(const char *t, ...);
 void panic(const char *t, ...);
 
 #endif

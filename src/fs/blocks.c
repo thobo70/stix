@@ -129,10 +129,12 @@ bhead_t *balloc(fsnum_t fs)
   brelse(bh);
 
   bh = getblk(isbk->dev, bidx);
+check_bfreelist();
   mset(bh->buf->mem, 0, sizeof(bh->buf->mem));
   bh->valid = true;
   bh->dwrite = true;
 
+check_bfreelist();
   return bh;
 }
 

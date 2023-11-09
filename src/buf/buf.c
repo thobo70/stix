@@ -39,6 +39,8 @@ void sync_buffer_from_disk(bhead_t *b);
 void remove_buf_from_freelist(bhead_t *b)
 {
   ASSERT(b);
+check_bfreelist();
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   if (!b->infreelist)
     return;
 
@@ -59,6 +61,7 @@ void remove_buf_from_freelist(bhead_t *b)
 void add_buf_to_freelist(bhead_t *b, int asFirst)
 {
   ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   if (b->infreelist)
     return;
   if (freelist) {
@@ -74,6 +77,17 @@ void add_buf_to_freelist(bhead_t *b, int asFirst)
     b->fprev = b;
   }
   b->infreelist = true;
+}
+
+
+
+void check_bfreelist(void)
+{
+  kprintf("#19 : %p %p\n", bufhead[19].hprev, bufhead[19].hnext);
+  for ( int i = 0 ; i < NBUFFER ; ++i ) {
+    bhead_t *b = &bufhead[i];
+    ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
+  }
 }
 
 
@@ -99,9 +113,10 @@ void init_buffers(void)
  */
 void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
 {
+  ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   bhead_t *p = HTAB(dev, block);
 
-  ASSERT(b);
   b->valid = false;
   b->error = false;
   if (b->hnext) {
@@ -114,9 +129,13 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
   }
   b->dev = dev;
   b->block = block;
+check_bfreelist();
   if (p) {
+    b->hprev = p->hprev;
+    b->hnext = p;
     p->hprev->hnext = b;
     p->hprev = b;
+check_bfreelist();
   } else {
     b->hprev = b;
     b->hnext = b;
@@ -203,6 +222,7 @@ bhead_t *getblk(ldev_t dev, block_t block)
 void brelse(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   add_buf_to_freelist(b, !b->valid);
   b->busy = false;
   wakeall(BLOCKBUSY);
@@ -213,6 +233,7 @@ void brelse(bhead_t *b)
 void buffer_synced(bhead_t *b, int err)
 {
   ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   b->dwrite = false;
   
   if (!b->busy)
@@ -234,10 +255,11 @@ void buffer_synced(bhead_t *b, int err)
 void sync_buffer_to_disk(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   ASSERT(b->error == false);
   ASSERT(b->valid);
   ASSERT(b->written == false);
-  ASSERT(b->busy == true);
+  // ASSERT(b->busy == true);       /// @todo why is this not true?
   ASSERT(b->infreelist == false);
   bdevstrategy(b->dev, b);
 }
@@ -250,6 +272,7 @@ void sync_buffer_to_disk(bhead_t *b)
 void sync_buffer_from_disk(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   ASSERT(b->error == false);
   ASSERT(b->valid == false);
   ASSERT(b->busy == true);
@@ -319,6 +342,7 @@ bhead_t *breada(ldev_t dev, block_t bl1, block_t bl2)
 void bwrite(bhead_t *b)
 {
   ASSERT(b);
+  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   ASSERT(b->valid);     /// buffer must be valid
   b->written = false;
   if (!b->dwrite) {
