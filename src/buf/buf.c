@@ -39,7 +39,6 @@ void sync_buffer_from_disk(bhead_t *b);
 void remove_buf_from_freelist(bhead_t *b)
 {
   ASSERT(b);
-check_bfreelist();
   ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
   if (!b->infreelist)
     return;
@@ -129,13 +128,11 @@ void move_buf_to_hashqueue(bhead_t *b, ldev_t dev, block_t block)
   }
   b->dev = dev;
   b->block = block;
-check_bfreelist();
   if (p) {
     b->hprev = p->hprev;
     b->hnext = p;
     p->hprev->hnext = b;
     p->hprev = b;
-check_bfreelist();
   } else {
     b->hprev = b;
     b->hnext = b;

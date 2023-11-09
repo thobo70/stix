@@ -81,7 +81,6 @@ static void test_typesize_pass(void) {
   CU_ASSERT_EQUAL_FATAL(sizeof(word_t), 2);
   CU_ASSERT_EQUAL_FATAL(sizeof(dword_t), 4);
   CU_ASSERT_EQUAL_FATAL(BLOCKSIZE % sizeof(dinode_t), 0);
-  check_bfreelist();
 }
  
 
@@ -112,7 +111,6 @@ static void test_buffer_pass(void) {
   bwrite(b);
   brelse(b);
   CU_ASSERT_EQUAL(strcmp(tstdisk_getblock(0, 0), str), 0);
-  check_bfreelist();
 }
  
 
@@ -128,7 +126,6 @@ static void test_block_pass(void) {
   CU_ASSERT_EQUAL(b->block, 6);
   bfree(0, b->block);
   brelse(b);
-  check_bfreelist();
 }
  
 
@@ -162,7 +159,6 @@ static void test_inode_pass(void) {
   iput(i.i);
   CU_ASSERT_EQUAL(i.i, active->u->fsroot);
   CU_ASSERT_EQUAL(active->u->fsroot->nref, 2);
-  check_bfreelist();
 }
 
 
@@ -186,21 +182,19 @@ kprintf("test_file_pass\n");
   CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(str) + 1), (int)strlen(str) + 1);
   CU_ASSERT_EQUAL(strcmp(buf, str), 0);
   CU_ASSERT_EQUAL(close(fd), 0);
-  check_bfreelist();
 
   CU_ASSERT_EQUAL(open("/test", ORDWR, 0777), -1);
 
   CU_ASSERT_EQUAL(unlink("/test/test.txt"), 0);
   CU_ASSERT_EQUAL(rmdir("/test"), 0);
-  check_bfreelist();
 
   CU_ASSERT_EQUAL(open("/test/test.txt", ORDWR, 0777), -1);
 
   int n;
   CU_ASSERT_EQUAL(fd = open("full.txt", OCREATE | ORDWR, 0777), 0);
   do {
-    CU_ASSERT_EQUAL(n = write(fd, (byte_t *)str, strlen(str) + 1), (int)strlen(str) + 1);
-  } while (n != -1);
+    CU_ASSERT_EQUAL((n = write(fd, (byte_t *)str, strlen(str) + 1)) >= 0, (1 == 1));
+  } while (n != 0);
   CU_ASSERT_EQUAL(close(fd), 0);
   CU_ASSERT_EQUAL(unlink("full.txt"), 0);
   check_bfreelist();

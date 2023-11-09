@@ -447,7 +447,6 @@ int write(int fdesc, byte_t *buf, fsize_t nbytes)
       ii->locked = true;
       while(nbytes) {
         bmap_t b = bmap(ii, active->u->fdesc[fdesc].ftabent->offset);
-check_bfreelist();
         if (b.fsblock == 0) {  // no new blocks left on device
           ii->locked = false;
           wakeall(INODELOCKED);
