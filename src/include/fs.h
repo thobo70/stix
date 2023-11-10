@@ -21,7 +21,7 @@
 #define DIRNAMEENTRY 14   ///< maximum length of directory entry name
 #define MAXPATH 256       ///< maximum length of path name
 
-typedef enum omode {
+typedef enum omode_t {
   OREAD = 0x0001,       ///< open for reading
   OWRITE = 0x0002,      ///< open for writing
   ORDWR = 0x0003,       ///< open for reading and writing
@@ -33,6 +33,12 @@ typedef enum omode {
   ONONBLOCK = 0x0100,   ///< non-blocking call
   OSYNC = 0x0200,       ///< synchronous write
 } omode_t;
+
+typedef enum seek_t {
+  SEEKSET,         ///< seek from beginning of file
+  SEEKCUR,         ///< seek from current position
+  SEEKEND          ///< seek from end of file
+} seek_t;
 
 typedef struct dirent_t {
   ninode_t inum;

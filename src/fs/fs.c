@@ -547,3 +547,53 @@ int read(int fdesc, byte_t *buf, fsize_t nbytes)
   }
 }
 
+
+
+
+int lseek(int fdesc, fsize_t offset, seek_t whence)
+{
+  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
+  iinode_t *ii = active->u->fdesc[fdesc].ftabent->inode;
+  switch(ii->dinode.ftype) {
+    case REGULAR:
+      while(ii->locked) {
+        waitfor(INODELOCKED);
+      }
+      ii->locked = true;
+      switch(whence) {
+        case SEEKSET:
+          active->u->fdesc[fdesc].ftabent->offset = offset;
+          break;
+        case SEEKCUR:
+          active->u->fdesc[fdesc].ftabent->offset += offset;
+          break;
+        case SEEKEND:
+          active->u->fdesc[fdesc].ftabent->offset = ii->dinode.fsize + offset;
+          break;
+        default:
+          /// @todo error invalid whence
+          ii->locked = false;
+          wakeall(INODELOCKED);
+          return -1;
+      }
+      ii->locked = false;
+      wakeall(INODELOCKED);
+      return active->u->fdesc[fdesc].ftabent->offset;
+    case CHARACTER:
+      /// @todo error is character device
+      return -1;
+    case BLOCK:
+      /// @todo error is block device
+      return -1;
+    case FIFO:
+      /// @todo error fifo
+      return -1;
+    default:
+      /// @todo error invalid file type
+      return -1;
+  }
+}

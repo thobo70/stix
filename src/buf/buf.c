@@ -76,6 +76,7 @@ void add_buf_to_freelist(bhead_t *b, int asFirst)
     b->fprev = b;
   }
   b->infreelist = true;
+  wakeall(NOFREEBLOCKS);
 }
 
 
