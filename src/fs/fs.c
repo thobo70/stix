@@ -597,3 +597,46 @@ int lseek(int fdesc, fsize_t offset, seek_t whence)
       return -1;
   }
 }
+
+
+
+int _stat(iinode_t *i, stat_t *statbuf)
+{
+  statbuf->ftype = i->dinode.ftype;
+  statbuf->fsize = i->dinode.fsize;
+  statbuf->fmode = i->dinode.fmode;
+  statbuf->nlinks = i->dinode.nlinks;
+  statbuf->uid = i->dinode.uid;
+  statbuf->gid = i->dinode.gid;
+  statbuf->tinode = i->dinode.tinode;
+  statbuf->tmod = i->dinode.tmod;
+  return 0;
+}
+
+
+int stat(const char *path, stat_t *statbuf)
+{
+  ASSERT(path != NULL);
+  ASSERT(statbuf != NULL);
+  namei_t in = namei(path);
+  if (in.i == NULL) {
+    /// @todo error link does not exists
+    return -1;
+  }
+
+  int rtn = _stat(in.i, statbuf);
+  iput(in.i);
+  return rtn;
+}
+
+
+int fstat(int fdesc, stat_t *statbuf)
+{
+  ASSERT(statbuf != NULL);
+  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
+  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
+  return _stat(active->u->fdesc[fdesc].ftabent->inode, statbuf);
+}
