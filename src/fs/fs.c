@@ -118,7 +118,10 @@ int unlinki(iinode_t *ipdir, const char *bname)
 
 int unlink(const char *path)
 {
-  ASSERT(path != NULL);
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  }
   namei_t in = namei(path);
   if (in.i == NULL || in.p == 0) {
     if (in.i != NULL)
@@ -146,7 +149,6 @@ int linki(iinode_t *ii, const char *newpath)
 {
   ASSERT(ii);
   ASSERT(newpath);
-
   namei_t in = namei(newpath);
   if (in.i != NULL) {
     iput(in.i);
@@ -209,8 +211,10 @@ int linki(iinode_t *ii, const char *newpath)
 
 int link(const char *path, const char *newpath)
 {
-  ASSERT(path != NULL);
-  ASSERT(newpath != NULL);
+  if (!path || !newpath) {
+    /// @todo error invalid path or newpath
+    return -1;
+  }
   namei_t in = namei(path);
   if (in.i == NULL || in.p == 0) {
     if (in.i != NULL)
@@ -232,8 +236,10 @@ int link(const char *path, const char *newpath)
 
 int mknode(const char *path, ftype_t ftype, fmode_t fmode)
 {
-  ASSERT(path != NULL);
-  ASSERT(ftype >= REGULAR && ftype <= FIFO);
+  if (!path || (ftype != REGULAR && ftype != DIRECTORY && ftype != CHARACTER && ftype != BLOCK && ftype != FIFO)) {
+    /// @todo error invalid parameters
+    return -1;
+  }
   namei_t in = namei(path);
   if (in.i != NULL) {
     iput(in.i);
@@ -262,7 +268,10 @@ int mknode(const char *path, ftype_t ftype, fmode_t fmode)
 
 int mkdir(const char *path, fmode_t fmode)
 {
-  ASSERT(path != NULL);
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  }
   mknode(path, DIRECTORY, fmode);
   namei_t in = namei(path);
   if (in.i == NULL) {
@@ -317,7 +326,10 @@ int mkdir(const char *path, fmode_t fmode)
 
 int rmdir(const char *path)
 {
-  ASSERT(path != NULL);
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  }
   namei_t in = namei(path);
   if (in.i == NULL || in.p == 0) {
     if (in.i != NULL)
@@ -351,8 +363,10 @@ int rmdir(const char *path)
 
 int open(const char *fname, omode_t omode, fmode_t fmode)
 {
-  ASSERT(fname != NULL);
-  ASSERT(omode >= OREAD && omode <= OSYNC);
+  if (!fname || (omode < OREAD || omode > OSYNC)) {
+    /// @todo error invalid fname or omode
+    return -1;
+  }
   int fdesc = freefdesc();
   if (fdesc < 0) {
     /// @todo error no free filetab entry
@@ -410,11 +424,10 @@ int open(const char *fname, omode_t omode, fmode_t fmode)
 
 int close(int fdesc)
 {
-  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+  if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
     /// @todo error invalid file descriptor
     return -1;
   }
-  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   putftabent(fdesc);
   active->u->fdesc[fdesc].ftabent = NULL;
   return 0;
@@ -425,11 +438,10 @@ int close(int fdesc)
 int write(int fdesc, byte_t *buf, fsize_t nbytes)
 {
   int written = 0;
-  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+  if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
     /// @todo error invalid file descriptor
     return -1;
   }
-  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   if (buf == NULL) {
     /// @todo error invalid buffer
     return -1;
@@ -491,11 +503,10 @@ int write(int fdesc, byte_t *buf, fsize_t nbytes)
 int read(int fdesc, byte_t *buf, fsize_t nbytes)
 {
   int read = 0;
-  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+  if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
     /// @todo error invalid file descriptor
     return -1;
   }
-  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   if (buf == NULL) {
     /// @todo error invalid buffer
     return -1;
@@ -552,7 +563,7 @@ int read(int fdesc, byte_t *buf, fsize_t nbytes)
 
 int lseek(int fdesc, fsize_t offset, seek_t whence)
 {
-  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+  if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
     /// @todo error invalid file descriptor
     return -1;
   }
@@ -616,8 +627,10 @@ int _stat(iinode_t *i, stat_t *statbuf)
 
 int stat(const char *path, stat_t *statbuf)
 {
-  ASSERT(path != NULL);
-  ASSERT(statbuf != NULL);
+  if (!path || !statbuf) {
+    /// @todo error invalid path or statbuf
+    return -1;
+  } 
   namei_t in = namei(path);
   if (in.i == NULL) {
     /// @todo error link does not exists
@@ -632,11 +645,13 @@ int stat(const char *path, stat_t *statbuf)
 
 int fstat(int fdesc, stat_t *statbuf)
 {
-  ASSERT(statbuf != NULL);
-  if (fdesc < 0 || fdesc >= MAXOPENFILES) {
+  if (!statbuf) {
+    /// @todo error invalid path or statbuf
+    return -1;
+  } 
+  if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
     /// @todo error invalid file descriptor
     return -1;
   }
-  ASSERT(active->u->fdesc[fdesc].ftabent != NULL);
   return _stat(active->u->fdesc[fdesc].ftabent->inode, statbuf);
 }
