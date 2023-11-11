@@ -19,6 +19,7 @@
 #define NFREEBLOCKS 50
 
 typedef struct superblock {
+    dword_t magic;
     word_t type;
     word_t version;
     word_t notclean : 1;

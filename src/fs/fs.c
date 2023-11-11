@@ -655,3 +655,118 @@ int fstat(int fdesc, stat_t *statbuf)
   }
   return _stat(active->u->fdesc[fdesc].ftabent->inode, statbuf);
 }
+
+
+
+int chown(const char *path, uid_t uid, gid_t gid)
+{
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  } 
+  namei_t in = namei(path);
+  if (in.i == NULL) {
+    /// @todo error link does not exists
+    return -1;
+  }
+  while(in.i->locked) {
+    waitfor(INODELOCKED);
+  }
+  in.i->locked = true;
+  in.i->dinode.uid = uid;
+  in.i->dinode.gid = gid;
+  in.i->modified = true;
+  in.i->locked = false;
+  wakeall(INODELOCKED);
+  iput(in.i);
+  return 0;
+}
+
+
+
+int chmod(const char *path, fmode_t fmode)
+{
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  } 
+  namei_t in = namei(path);
+  if (in.i == NULL) {
+    /// @todo error link does not exists
+    return -1;
+  }
+  while(in.i->locked) {
+    waitfor(INODELOCKED);
+  }
+  in.i->locked = true;
+  in.i->dinode.fmode = fmode;
+  in.i->modified = true;
+  in.i->locked = false;
+  wakeall(INODELOCKED);
+  iput(in.i);
+  return 0;
+}
+
+
+
+int chdir(const char *path)
+{
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  } 
+  namei_t in = namei(path);
+  if (in.i == NULL) {
+    /// @todo error link does not exists
+    return -1;
+  }
+  if (in.i->dinode.ftype != DIRECTORY) {
+    /// @todo error is not directory
+    iput(in.i);
+    return -1;
+  }
+  iput(active->u->workdir);
+  active->u->workdir = in.i;
+  return 0;
+}
+
+
+
+int chroot(const char *path)
+{
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  } 
+  namei_t in = namei(path);
+  if (in.i == NULL) {
+    /// @todo error link does not exists
+    return -1;
+  }
+  if (in.i->dinode.ftype != DIRECTORY) {
+    /// @todo error is not directory
+    iput(in.i);
+    return -1;
+  }
+  iput(active->u->fsroot);
+  active->u->fsroot = in.i;
+  return 0;
+}
+
+
+
+int dup(int fdesc)
+{
+  if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
+  int fdesc2 = freefdesc();
+  if (fdesc2 < 0) {
+    /// @todo error no free filetab entry
+    return -1;
+  }
+  active->u->fdesc[fdesc2] = active->u->fdesc[fdesc];
+  active->u->fdesc[fdesc2].ftabent->refs++;
+  return fdesc2;
+}
