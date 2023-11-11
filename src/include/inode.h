@@ -15,6 +15,7 @@
 #include "tdefs.h"
 #include "blocks.h"
 #include "dd.h"
+#include "clist.h"
 
 #define NINODES 50          ///< number of inodes in system
 
@@ -61,6 +62,8 @@ typedef struct iinode_t
   fsnum_t fs;
   ninode_t inum;
   nref_t nref;
+  clist_t *rclist;
+  clist_t *wclist;
   struct iinode_t *hprev;
   struct iinode_t *hnext;
   struct iinode_t *fprev;

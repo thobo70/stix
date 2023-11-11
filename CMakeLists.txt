@@ -9,6 +9,7 @@ project(
 
 set(SRC 
   src/buf/buf.c
+  src/clist/clist.c
   src/fs/fs.c
   src/fs/inode.c
   src/fs/blocks.c
