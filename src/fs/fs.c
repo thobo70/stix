@@ -658,7 +658,7 @@ int fstat(int fdesc, stat_t *statbuf)
 
 
 
-int chown(const char *path, uid_t uid, gid_t gid)
+int chown(const char *path, user_t uid, group_t gid)
 {
   if (!path) {
     /// @todo error invalid path

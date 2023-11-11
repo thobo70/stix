@@ -39,7 +39,7 @@ typedef word_t ftype_t;
 /// @brief inode stored on disk
 typedef struct dinode_t {
   ftype_t ftype;
-  owner_t uid;
+  user_t uid;
   group_t gid;
   fmode_t fmode;
   utime_t tmod;
@@ -69,7 +69,7 @@ typedef struct iinode_t
 
 typedef struct stat_t {
   ftype_t ftype;
-  owner_t uid;
+  user_t uid;
   group_t gid;
   fmode_t fmode;
   utime_t tmod;
