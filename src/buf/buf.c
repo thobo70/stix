@@ -83,7 +83,6 @@ void add_buf_to_freelist(bhead_t *b, int asFirst)
 
 void check_bfreelist(void)
 {
-  kprintf("#19 : %p %p\n", bufhead[19].hprev, bufhead[19].hnext);
   for ( int i = 0 ; i < NBUFFER ; ++i ) {
     bhead_t *b = &bufhead[i];
     ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));

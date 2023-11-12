@@ -20,6 +20,7 @@
 #include "buf.h"
 #include "pc.h"
 #include "dd.h"
+#include "clist.h"
 
 
 extern process_t *active;
@@ -46,6 +47,7 @@ CU_SUITE_SETUP() {
   init_buffers();
   init_inodes();
   init_fs(); 
+  init_clist();
   bdevopen((ldev_t){{0, 0}});
   return CUE_SUCCESS;
 }
@@ -164,7 +166,6 @@ static void test_inode_pass(void) {
 
 
 static void test_file_pass(void) {
-kprintf("test_file_pass\n");
   CU_ASSERT_EQUAL(mkdir("/test", 0777), 0);
   CU_ASSERT_EQUAL(rmdir("/test"), 0);
 
@@ -202,11 +203,39 @@ kprintf("test_file_pass\n");
  
 
 
+static void test_clist_pass(void) {
+  byte_t i = clist_create();
+  CU_ASSERT_NOT_EQUAL_FATAL(i, 0);
+  CU_ASSERT_EQUAL(clist_size(i), 0);
+  char buf[100];
+  for (int j = 0; j < 100; j++) {
+    buf[j] = j;
+  }
+  CU_ASSERT_EQUAL(clist_push(i, buf, 100), 0);
+  CU_ASSERT_EQUAL(clist_size(i), 100);
+  CU_ASSERT_EQUAL(clist_pop(i, buf, 100), 0);
+  CU_ASSERT_EQUAL(clist_size(i), 0);
+  CU_ASSERT_EQUAL(clist_push(i, buf, 100), 0);
+  CU_ASSERT_EQUAL(clist_size(i), 100);
+  CU_ASSERT_EQUAL(clist_pop(i, buf, 100), 0);
+  CU_ASSERT_EQUAL(clist_size(i), 0);
+  for (int j = 0; j < 100; j++) {
+    CU_ASSERT_EQUAL(buf[j], j);
+  }
+  CU_ASSERT_EQUAL(clist_push(i, buf, 100), 0);
+  CU_ASSERT_EQUAL(clist_size(i), 100);
+  clist_destroy(i);
+}
+
+
+
 CUNIT_CI_RUN(
   "my-suite",
   CUNIT_CI_TEST(test_typesize_pass),
   CUNIT_CI_TEST(test_buffer_pass),
   CUNIT_CI_TEST(test_block_pass),
   CUNIT_CI_TEST(test_inode_pass),
-  CUNIT_CI_TEST(test_file_pass)
+  CUNIT_CI_TEST(test_file_pass),
+  CUNIT_CI_TEST(test_clist_pass)
+
 )

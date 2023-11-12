@@ -267,9 +267,10 @@ int clist_push(byte_t clisti, char *data, sizem_t size)
     }
     sizem_t n = MIN(size, MAXNODEDATA - (sizem_t)node->head);
     mcpy(node->data + node->head, data, n);
-    node->next += n;
+    node->head += n;
     size -= n;
     data += n;
+    list->size += n;
   }
   return 0;
 }
@@ -307,6 +308,7 @@ int clist_pop(byte_t clisti, char *data, sizem_t size)
       node->tail += n;
       size -= n;
       data += n;
+      list->size -= n;
     }
     if (node->tail == node->head) {
       byte_t i = node->next;
