@@ -1,3 +1,13 @@
+/**
+ * @file clist.c
+ * @author Thomas Boos (tboos70@gmail.com)
+ * @brief character list implementation
+ * @version 0.1
+ * @date 2023-11-12
+ * 
+ * @copyright Copyright (c) 2023
+ * 
+ */
 #include "clist.h"
 #include "utils.h"
 
@@ -10,7 +20,10 @@ clist_t clists[MAXCLISTS];
 byte_t freeclist = 0;
 
 
-
+/**
+ * @brief initialize clist
+ * 
+ */
 void init_clist(void)
 {
   mset(nodes, 0, sizeof(nodes));
@@ -26,7 +39,11 @@ void init_clist(void)
 }
 
 
-
+/**
+ * @brief create a new clist
+ * 
+ * @return byte_t   clist index
+ */
 byte_t clist_create(void)
 {
   byte_t i = freeclist;
@@ -41,6 +58,13 @@ byte_t clist_create(void)
   return i;
 }
 
+
+
+/**
+ * @brief destroy a clist
+ * 
+ * @param clisti  clist index
+ */
 void clist_destroy(byte_t clisti)
 {
   ASSERT(clisti <= MAXCLISTS);
@@ -56,6 +80,14 @@ void clist_destroy(byte_t clisti)
   freeclist = clisti;
 }
 
+
+
+/**
+ * @brief size of clist
+ * 
+ * @param clisti  clist index
+ * @return int    size of clist
+ */
 int clist_size(byte_t clisti) {
   ASSERT(clisti <= MAXCLISTS);
   clist_t *list = &clists[clisti - 1];
@@ -66,6 +98,12 @@ int clist_size(byte_t clisti) {
 }
 
 
+
+/**
+ * @brief get a new node
+ * 
+ * @return byte_t   node index
+ */
 byte_t getnode(void)
 {
   byte_t i = freenode;
@@ -81,6 +119,12 @@ byte_t getnode(void)
 }
 
 
+
+/**
+ * @brief put a node back
+ * 
+ * @param nodei   node index
+ */
 void putnode(byte_t nodei)
 {
   ASSERT(nodei <= MAXNODES);
@@ -93,6 +137,16 @@ void putnode(byte_t nodei)
   freenode = nodei;
 }
 
+
+
+/**
+ * @brief push data to clist
+ * 
+ * @param clisti  clist index
+ * @param data    data to push
+ * @param size    size of data
+ * @return int    0 on success, -1 on error
+ */
 int clist_push(byte_t clisti, char *data, sizem_t size)
 {
   ASSERT(clisti <= MAXCLISTS);
@@ -111,6 +165,9 @@ int clist_push(byte_t clisti, char *data, sizem_t size)
   while (size > 0)
   {
     clist_node_t *node = &nodes[list->head - 1];
+    ASSERT(node->next <= MAXNODES);
+    ASSERT(node->tail <= node->head);
+    ASSERT(node->head <= MAXNODEDATA);
     if (node->head == MAXNODEDATA) {
       byte_t i = getnode();
       if (i == 0)
@@ -121,7 +178,7 @@ int clist_push(byte_t clisti, char *data, sizem_t size)
     }
     sizem_t n = MIN(size, MAXNODEDATA - (sizem_t)node->head);
     mcpy(node->data + node->head, data, n);
-    node->head += n;
+    node->next += n;
     size -= n;
     data += n;
   }
@@ -129,6 +186,15 @@ int clist_push(byte_t clisti, char *data, sizem_t size)
 }
 
 
+
+/**
+ * @brief pop data from clist
+ * 
+ * @param clisti  clist index
+ * @param data    data to pop
+ * @param size    size of data
+ * @return int    0 on success, -1 on error
+ */
 int clist_pop(byte_t clisti, char *data, sizem_t size)
 {
   ASSERT(clisti <= MAXCLISTS);
