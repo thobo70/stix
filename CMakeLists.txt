@@ -100,6 +100,7 @@ list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
 message("downloading plantuml.jar.asc: ${ERROR_MESSAGE}")
 if (STATUS_CODE EQUAL 0)
   file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc PLANTUML_NEW)
+  file(TOUCH ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
   file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old PLANTUML_OLD)
   if (NOT PLANTUML_NEW STREQUAL PLANTUML_OLD)
     file(
