@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(
   os
-  VERSION 0.1.1
+  VERSION 0.0.1
   DESCRIPTION "a clone of an early unix"
   LANGUAGES C 
 )
