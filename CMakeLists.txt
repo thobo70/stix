@@ -7,6 +7,19 @@ project(
   LANGUAGES C 
 )
 
+include(FetchContent)
+
+FetchContent_Declare(
+  cunit
+  GIT_REPOSITORY https://gitlab.com/cunity/cunit.git
+  GIT_TAG        3.2.7
+)
+
+FetchContent_MakeAvailable(cunit)
+
+set(CUNIT_DISABLE_TESTS ON CACHE BOOL "Disable CUnit tests" FORCE)
+set(CUNIT_DISABLE_EXAMPLES ON CACHE BOOL "Disable CUnit examples" FORCE)
+
 set(SRC 
   src/buf/buf.c
   src/clist/clist.c
@@ -19,7 +32,7 @@ set(SRC
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -pedantic-errors")
 
-add_subdirectory(cunit/CUnit)
+# add_subdirectory(${cunit_SOURCE_DIR}/CUnit)
 
 find_package(Java 8 COMPONENTS Runtime)
 
