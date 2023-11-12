@@ -16,17 +16,6 @@ git config --global user.email your@email.com
 git config --global http.sslVerify false
 ```
 
-## CUnit
-cunit is integrated as a git submodule and must be initialized for first use
-```
-cd cunit
-git submodule init
-git submodule update
-```
- * https://cunit.sourceforge.net/doc/index.html
- * https://cunit.sourceforge.net/doxdocs/index.html
-
-
 ## Sources of documents
 for inspiration you can read following documents. Especially the first link covers the aimed functionality best
  * https://books.google.de/books/about/The_Design_of_the_UNIX_Operating_System.html?id=NrBQAAAAMAAJ&redir_esc=y
