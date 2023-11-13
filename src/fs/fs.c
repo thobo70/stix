@@ -20,12 +20,25 @@
 
 filetab_t filetab[MAXFILETAB];  ///< file table
 
+
+
+/**
+ * @brief initialize file system table
+ * 
+ */
 void init_fs()
 {
   mset(filetab, 0, sizeof(filetab));
 }
 
 
+
+/**
+ * @brief get empty file system entry and assign inode
+ * 
+ * @param ii inode
+ * @return int file system number
+ */
 int getftabent(iinode_t* ii)
 {
   ASSERT(ii != NULL);
@@ -40,6 +53,12 @@ int getftabent(iinode_t* ii)
 }
 
 
+
+/**
+ * @brief put file system entry
+ * 
+ * @param f file system entry
+ */
 void putftabent(int f)
 {
   ASSERT(f >= 0 && f < MAXFILETAB);
@@ -52,6 +71,13 @@ void putftabent(int f)
   }
 } 
 
+
+
+/**
+ * @brief get free file descriptor
+ * 
+ * @return int  file descriptor
+ */
 int freefdesc(void)
 {
   for (int i = 0; i < MAXOPENFILES; i++) {
@@ -63,6 +89,13 @@ int freefdesc(void)
 }
 
 
+
+/**
+ * @brief retrieve basename from path
+ * 
+ * @param path          path
+ * @return const char*  basename
+ */
 const char *basename(const char *path)
 {
   ASSERT(path);
@@ -75,6 +108,14 @@ const char *basename(const char *path)
 }
 
 
+
+/**
+ * @brief unlink directory entry from directory with inode ipdir
+ * 
+ * @param ipdir   inode of directory
+ * @param bname   basename of directory entry
+ * @return int    0 on success, -1 on error
+ */
 int unlinki(iinode_t *ipdir, const char *bname)
 {
   ASSERT(ipdir);
@@ -116,6 +157,12 @@ int unlinki(iinode_t *ipdir, const char *bname)
 
 
 
+/**
+ * @brief unlink file path
+ * 
+ * @param path  path to file
+ * @return int  0 on success, -1 on error
+ */
 int unlink(const char *path)
 {
   if (!path) {
@@ -145,6 +192,13 @@ int unlink(const char *path)
 
 
 
+/**
+ * @brief link inode ii with newpath
+ * 
+ * @param ii        inode
+ * @param newpath   new path
+ * @return int      0 on success, -1 on error
+ */
 int linki(iinode_t *ii, const char *newpath)
 {
   ASSERT(ii);
@@ -209,6 +263,13 @@ int linki(iinode_t *ii, const char *newpath)
 
 
 
+/**
+ * @brief link path with newpath
+ * 
+ * @param path      path
+ * @param newpath   new path
+ * @return int      0 on success, -1 on error
+ */
 int link(const char *path, const char *newpath)
 {
   if (!path || !newpath) {
@@ -234,6 +295,14 @@ int link(const char *path, const char *newpath)
 
 
 
+/**
+ * @brief make node
+ * 
+ * @param path    path
+ * @param ftype   file type
+ * @param fmode   file mode
+ * @return int    0 on success, -1 on error
+ */
 int mknode(const char *path, ftype_t ftype, fmode_t fmode)
 {
   if (!path || (ftype != REGULAR && ftype != DIRECTORY && ftype != CHARACTER && ftype != BLOCK && ftype != FIFO)) {
@@ -266,6 +335,13 @@ int mknode(const char *path, ftype_t ftype, fmode_t fmode)
 
 
 
+/**
+ * @brief make directory
+ * 
+ * @param path    path
+ * @param fmode   file mode
+ * @return int    0 on success, -1 on error
+ */
 int mkdir(const char *path, fmode_t fmode)
 {
   if (!path) {
@@ -324,6 +400,12 @@ int mkdir(const char *path, fmode_t fmode)
 
 
 
+/**
+ * @brief remove directory
+ * 
+ * @param path    path
+ * @return int    0 on success, -1 on error
+ */
 int rmdir(const char *path)
 {
   if (!path) {
@@ -361,6 +443,14 @@ int rmdir(const char *path)
 
 
 
+/**
+ * @brief open file
+ * 
+ * @param fname   file name
+ * @param omode   open mode
+ * @param fmode   file mode
+ * @return int    file descriptor
+ */
 int open(const char *fname, omode_t omode, fmode_t fmode)
 {
   if (!fname || (omode < OREAD || omode > OSYNC)) {
@@ -422,6 +512,12 @@ int open(const char *fname, omode_t omode, fmode_t fmode)
 
 
 
+/**
+ * @brief close file
+ * 
+ * @param fdesc   file descriptor
+ * @return int    0 on success, -1 on error
+ */
 int close(int fdesc)
 {
   if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
@@ -435,6 +531,14 @@ int close(int fdesc)
 
 
 
+/**
+ * @brief write buf to file
+ * 
+ * @param fdesc   file descriptor  
+ * @param buf     buffer   
+ * @param nbytes  number of bytes to write
+ * @return int    number of bytes written, -1 on error
+ */
 int write(int fdesc, byte_t *buf, fsize_t nbytes)
 {
   int written = 0;
@@ -500,6 +604,14 @@ int write(int fdesc, byte_t *buf, fsize_t nbytes)
 
 
 
+/**
+ * @brief read file to buf
+ * 
+ * @param fdesc   file descriptor  
+ * @param buf     buffer   
+ * @param nbytes  number of bytes to read
+ * @return int    number of bytes read, -1 on error
+ */
 int read(int fdesc, byte_t *buf, fsize_t nbytes)
 {
   int read = 0;
@@ -560,7 +672,14 @@ int read(int fdesc, byte_t *buf, fsize_t nbytes)
 
 
 
-
+/**
+ * @brief seek in file
+ * 
+ * @param fdesc   file descriptor  
+ * @param offset  offset
+ * @param whence  whence
+ * @return int    offset on success, -1 on error
+ */
 int lseek(int fdesc, fsize_t offset, seek_t whence)
 {
   if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
@@ -611,8 +730,64 @@ int lseek(int fdesc, fsize_t offset, seek_t whence)
 
 
 
-int _stat(iinode_t *i, stat_t *statbuf)
+/**
+ * @brief rename file
+ * 
+ * @param oldpath   old path
+ * @param newpath   new path
+ * @return int      0 on success, -1 on error
+ */
+int rename(const char *oldpath, const char *newpath)
 {
+  if (!oldpath || !newpath) {
+    /// @todo error invalid path
+    return -1;
+  }
+  namei_t in = namei(oldpath);
+  if (in.i == NULL || in.p == 0) {
+    if (in.i != NULL)
+      iput(in.i);
+    return -1;   // error already set by namei
+  }
+  if (in.i->dinode.ftype == DIRECTORY) {
+    /// @todo error is directory
+    iput(in.i);
+    return -1;
+  }
+  namei_t in2 = namei(newpath);
+  if (in2.i != NULL) {
+    iput(in.i);
+    iput(in2.i);
+    /// @todo error link already exists
+    return -1;
+  }
+  if (in2.p == 0)    // parent dir not found
+    return -1;   // error already set by namei
+  iinode_t *pi = iget(in2.fs, in2.p);
+  if (pi == NULL) {
+    iput(in.i);
+    return -1;   // error already set by iget
+  }
+  unlinki(pi, basename(newpath));
+  int rtn = linki(in.i, newpath);
+  iput(in.i);
+  iput(pi);
+  return rtn;
+}
+
+
+
+/**
+ * @brief get file status from inode
+ * 
+ * @param i       inode
+ * @param statbuf stat buffer 
+ * @return int    0 on success, -1 on error
+ */
+void _stat(iinode_t *i, stat_t *statbuf)
+{
+  ASSERT(i);
+  ASSERT(statbuf);
   statbuf->ftype = i->dinode.ftype;
   statbuf->fsize = i->dinode.fsize;
   statbuf->fmode = i->dinode.fmode;
@@ -621,10 +796,17 @@ int _stat(iinode_t *i, stat_t *statbuf)
   statbuf->gid = i->dinode.gid;
   statbuf->tinode = i->dinode.tinode;
   statbuf->tmod = i->dinode.tmod;
-  return 0;
 }
 
 
+
+/**
+ * @brief get file status
+ * 
+ * @param path    path
+ * @param statbuf stat buffer 
+ * @return int    0 on success, -1 on error
+ */
 int stat(const char *path, stat_t *statbuf)
 {
   if (!path || !statbuf) {
@@ -637,12 +819,20 @@ int stat(const char *path, stat_t *statbuf)
     return -1;
   }
 
-  int rtn = _stat(in.i, statbuf);
+  _stat(in.i, statbuf);
   iput(in.i);
-  return rtn;
+  return 0;
 }
 
 
+
+/**
+ * @brief get file status from file descriptor
+ * 
+ * @param fdesc   file descriptor
+ * @param statbuf stat buffer 
+ * @return int    0 on success, -1 on error
+ */
 int fstat(int fdesc, stat_t *statbuf)
 {
   if (!statbuf) {
@@ -653,11 +843,20 @@ int fstat(int fdesc, stat_t *statbuf)
     /// @todo error invalid file descriptor
     return -1;
   }
-  return _stat(active->u->fdesc[fdesc].ftabent->inode, statbuf);
+  _stat(active->u->fdesc[fdesc].ftabent->inode, statbuf);
+  return 0;
 }
 
 
 
+/**
+ * @brief change owner
+ * 
+ * @param path    path
+ * @param uid     user id
+ * @param gid     group id
+ * @return int    0 on success, -1 on error
+ */
 int chown(const char *path, user_t uid, group_t gid)
 {
   if (!path) {
@@ -684,6 +883,13 @@ int chown(const char *path, user_t uid, group_t gid)
 
 
 
+/**
+ * @brief change mode
+ * 
+ * @param path    path
+ * @param fmode   file mode
+ * @return int    0 on success, -1 on error
+ */
 int chmod(const char *path, fmode_t fmode)
 {
   if (!path) {
@@ -709,6 +915,12 @@ int chmod(const char *path, fmode_t fmode)
 
 
 
+/**
+ * @brief change directory
+ * 
+ * @param path    path
+ * @return int    0 on success, -1 on error
+ */
 int chdir(const char *path)
 {
   if (!path) {
@@ -732,6 +944,12 @@ int chdir(const char *path)
 
 
 
+/**
+ * @brief change root directory
+ * 
+ * @param path    path
+ * @return int    0 on success, -1 on error
+ */
 int chroot(const char *path)
 {
   if (!path) {
@@ -755,6 +973,12 @@ int chroot(const char *path)
 
 
 
+/**
+ * @brief duplicate file descriptor
+ * 
+ * @param fdesc   file descriptor
+ * @return int    new file descriptor
+ */
 int dup(int fdesc)
 {
   if (fdesc < 0 || fdesc >= MAXOPENFILES || !active->u->fdesc[fdesc].ftabent) {
