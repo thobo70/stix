@@ -34,8 +34,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -pedantic-errors")
 
 # add_subdirectory(${cunit_SOURCE_DIR}/CUnit)
 
-find_package(Java 8 COMPONENTS Runtime)
-
 include(CTest)
 
 add_executable(
@@ -81,34 +79,36 @@ add_test(
 )
 set_property(TEST tests1 PROPERTY TIMEOUT "10")
 
-file(
-  DOWNLOAD 
-  https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar.asc 
-  ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc
-  SHOW_PROGRESS
-  TIMEOUT 10
-  STATUS DOWNLOAD_STATUS
-)
-list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
-message("downloading plantuml.jar.asc: ${ERROR_MESSAGE}")
-if (STATUS_CODE EQUAL 0)
-  file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc PLANTUML_NEW)
-  file(TOUCH ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
-  file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old PLANTUML_OLD)
-  if (NOT PLANTUML_NEW STREQUAL PLANTUML_OLD)
-    file(
-      DOWNLOAD
-      https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
-      ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar
-      TIMEOUT 10
-      SHOW_PROGRESS
-    )  
-    file(RENAME ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
-  endif()
-endif()
-
 if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  find_package(Java 8 COMPONENTS Runtime)
+
+  file(
+    DOWNLOAD 
+    https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar.asc 
+    ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc
+    SHOW_PROGRESS
+    TIMEOUT 10
+    STATUS DOWNLOAD_STATUS
+  )
+  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+  list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+  message("downloading plantuml.jar.asc: ${ERROR_MESSAGE}")
+  if (STATUS_CODE EQUAL 0)
+    file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc PLANTUML_NEW)
+    file(TOUCH ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
+    file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old PLANTUML_OLD)
+    if (NOT PLANTUML_NEW STREQUAL PLANTUML_OLD)
+      file(
+        DOWNLOAD
+        https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
+        ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar
+        TIMEOUT 10
+        SHOW_PROGRESS
+      )  
+      file(RENAME ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
+    endif()
+  endif()
+
   find_package(
     Doxygen
     REQUIRED doxygen dot
