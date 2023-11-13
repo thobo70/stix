@@ -80,23 +80,23 @@ void cdevclose(ldev_t ldev)
 }
 
 
-void cdevread(ldev_t ldev, bhead_t *bh)
+void cdevread(ldev_t ldev, clist_t *cl)
 {
   ASSERT(ldev.major < ncdeventries);
-  ASSERT(bh);
+  ASSERT(cl);
   ASSERT(cdevtable[ldev.major]);
 
-  cdevtable[ldev.major]->read(ldev.minor, bh);
+  cdevtable[ldev.major]->read(ldev.minor, cl);
 }
 
 
-void cdevwrite(ldev_t ldev, bhead_t *bh)
+void cdevwrite(ldev_t ldev, clist_t *cl)
 {
   ASSERT(ldev.major < ncdeventries);
-  ASSERT(bh);
+  ASSERT(cl);
   ASSERT(cdevtable[ldev.major]);
 
-  cdevtable[ldev.major]->write(ldev.minor, bh);
+  cdevtable[ldev.major]->write(ldev.minor, cl);
 }
 
 

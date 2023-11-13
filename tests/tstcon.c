@@ -11,9 +11,10 @@
 
 #include "utils.h"
 #include "dd.h"
+#include "clist.h"
 
-void tstcon_read(ldevminor_t minor, bhead_t *bh);
-void tstcon_write(ldevminor_t minor, bhead_t *bh);
+void tstcon_read(ldevminor_t minor, clist_t *cl);
+void tstcon_write(ldevminor_t minor, clist_t *cl);
 void tstcon_ioctl(ldevminor_t minor, int cmd, void *arg);
 
 cdev_t tstcon = {
@@ -25,17 +26,17 @@ cdev_t tstcon = {
 };
 
 
-void tstcon_read(ldevminor_t minor, bhead_t *bh)
+void tstcon_read(ldevminor_t minor, clist_t *cl)
 {
   ASSERT(minor < 1);
-  ASSERT(bh);
+  ASSERT(cl);
 }
 
 
-void tstcon_write(ldevminor_t minor, bhead_t *bh)
+void tstcon_write(ldevminor_t minor, clist_t *cl)
 {
   ASSERT(minor < 1);
-  ASSERT(bh);
+  ASSERT(cl);
 }
 
 

@@ -109,7 +109,7 @@ if (STATUS_CODE EQUAL 0)
       ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar
       SHOW_PROGRESS
     )  
-    file(COPY_FILE ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
+    file(RENAME ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
   endif()
 endif()
 
