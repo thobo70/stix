@@ -38,12 +38,6 @@ find_package(Java 8 COMPONENTS Runtime)
 
 include(CTest)
 
-find_package(
-  Doxygen
-  REQUIRED doxygen dot
-  OPTIONAL_COMPONENTS mscgen dia
-)
-
 add_executable(
   mockup
   src/main.c
@@ -107,24 +101,33 @@ if (STATUS_CODE EQUAL 0)
       DOWNLOAD
       https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
       ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar
+      TIMEOUT 10
       SHOW_PROGRESS
     )  
     file(RENAME ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
   endif()
 endif()
 
-set(DOXYGEN_EXCLUDE_PATTERNS  */build/*)
-set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
-set(DOXYGEN_GENERATE_HTML YES)
-set(DOXYGEN_GENERATE_MAN YES)
-set(DOXYGEN_GENERATE_LATEX YES)
-set(DOXYGEN_CALL_GRAPH YES)
-set(DOXYGEN_CALLER_GRAPH YES)
-set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
-set(DOXYGEN_PLANTUML_JAR_PATH "${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar")
-set(DOXYGEN_IMAGE_PATH "${PROJECT_SOURCE_DIR}")
-set(DOXYGEN_WARN_LOGFILE "DoxygenWarningLog.txt")
+if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  find_package(
+    Doxygen
+    REQUIRED doxygen dot
+    OPTIONAL_COMPONENTS mscgen dia
+  )
 
-doxygen_add_docs(
-  docs
-)
+  set(DOXYGEN_EXCLUDE_PATTERNS  */build/*)
+  set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
+  set(DOXYGEN_GENERATE_HTML YES)
+  set(DOXYGEN_GENERATE_MAN YES)
+  set(DOXYGEN_GENERATE_LATEX YES)
+  set(DOXYGEN_CALL_GRAPH YES)
+  set(DOXYGEN_CALLER_GRAPH YES)
+  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+  set(DOXYGEN_PLANTUML_JAR_PATH "${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar")
+  set(DOXYGEN_IMAGE_PATH "${PROJECT_SOURCE_DIR}")
+  set(DOXYGEN_WARN_LOGFILE "DoxygenWarningLog.txt")
+
+  doxygen_add_docs(
+    docs
+  )
+endif()
