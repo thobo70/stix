@@ -65,7 +65,8 @@ void bdevstrategy(ldev_t ldev, bhead_t *bh)
 void cdevopen(ldev_t ldev)
 {
   ASSERT(ldev.major < ncdeventries);
-  ASSERT(cdevtable[ldev.major]);
+  if (!cdevtable[ldev.major])
+    return;
 
   cdevtable[ldev.major]->open(ldev.minor);
 }
@@ -74,26 +75,25 @@ void cdevopen(ldev_t ldev)
 void cdevclose(ldev_t ldev)
 {
   ASSERT(ldev.major < ncdeventries);
-  ASSERT(cdevtable[ldev.major]);
+  if (!cdevtable[ldev.major])
+    return;
 
   cdevtable[ldev.major]->close(ldev.minor);
 }
 
 
-void cdevread(ldev_t ldev, clist_t *cl)
+void cdevread(ldev_t ldev, byte_t cl)
 {
   ASSERT(ldev.major < ncdeventries);
-  ASSERT(cl);
   ASSERT(cdevtable[ldev.major]);
 
   cdevtable[ldev.major]->read(ldev.minor, cl);
 }
 
 
-void cdevwrite(ldev_t ldev, clist_t *cl)
+void cdevwrite(ldev_t ldev, byte_t cl)
 {
   ASSERT(ldev.major < ncdeventries);
-  ASSERT(cl);
   ASSERT(cdevtable[ldev.major]);
 
   cdevtable[ldev.major]->write(ldev.minor, cl);
