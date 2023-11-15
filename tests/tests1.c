@@ -198,6 +198,7 @@ static void test_file_pass(void) {
   } while (n != 0);
   CU_ASSERT_EQUAL(close(fd), 0);
   CU_ASSERT_EQUAL(unlink("full.txt"), 0);
+  syncall_buffers(false);
   check_bfreelist();
 }
  

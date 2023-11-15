@@ -81,6 +81,34 @@ void add_buf_to_freelist(bhead_t *b, int asFirst)
 
 
 
+/**
+ * @brief sync all buffers
+ * 
+ * @param async   if true wait for last buffer to be written
+ */
+void syncall_buffers(int async)
+{
+  bhead_t *b = freelist, *bl = NULL;
+  do
+  {
+    if (!b)
+      break;
+    if (b->dwrite) {
+      remove_buf_from_freelist(b);
+      sync_buffer_to_disk(b);
+      bl = b;         // remember last buffer if we have to wait for it
+      b = freelist;   // list has changed therefore restart
+      continue;
+    }
+    b = b->fnext;
+  } while (b != freelist);
+  if (bl && !async)
+    while (!bl->written)
+      waitfor(BLOCKWRITE);
+}
+
+
+
 void check_bfreelist(void)
 {
   for ( int i = 0 ; i < NBUFFER ; ++i ) {

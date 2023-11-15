@@ -48,6 +48,7 @@ void init_buffers(void);
 void check_bfreelist(void);
 
 
+
 /**
  * @brief add block to free list
  * 
@@ -57,7 +58,23 @@ void check_bfreelist(void);
 void add_buf_to_freelist(bhead_t *b, int asFirst);
 
 
+
+/**
+ * @brief get block from free list
+ * 
+ * @return bhead_t*   pointer to block header
+ */
 bhead_t *getblk(ldev_t dev, block_t block);
+
+
+
+/**
+ * @brief sync all buffers to disk 
+ * 
+ * @param async   if true, sync buffers asynchronously
+ */
+void syncall_buffers(int async);
+
 
 
 /**

@@ -59,7 +59,6 @@ int open(const char *fname, omode_t omode, fmode_t fmode);
 int close(int fd);
 int read(int fdesc, byte_t *buf, fsize_t nbytes);
 int write(int fdesc, byte_t *buf, fsize_t nbytes);
-// int seek(int fd, fsize_t offset, int whence);
 int lseek(int fdesc, fsize_t offset, seek_t whence);
 int unlink(const char *path);
 int mkdir(const char *path, fmode_t fmode);
