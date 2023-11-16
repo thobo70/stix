@@ -28,7 +28,7 @@ jobs:
       
     - name: Install plantuml
       # Install plantuml to generate documentation
-      run: wget https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -O ./plantuml/plantuml.jar
+      run: mkdir ./plantuml ; wget https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar -O ./plantuml/plantuml.jar
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
