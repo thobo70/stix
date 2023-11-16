@@ -79,7 +79,7 @@ add_test(
 )
 set_property(TEST tests1 PROPERTY TIMEOUT "10")
 
-if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Workflow")
+if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Workflow1")
   find_package(Java 8 COMPONENTS Runtime)
 
   file(
