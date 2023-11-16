@@ -35,6 +35,10 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Generate Docs
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --target docs --config ${{env.BUILD_TYPE}}
+
     - name: Test
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.
@@ -45,5 +49,5 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: html-docs
-        path: /home/runner/work/stix/stix/build/html
+        path: ${{github.workspace}}/build/html
 
