@@ -230,3 +230,36 @@ int mount(ldev_t dev, iinode_t *ii, ninode_t pino)
   isbk->pino = pino;
   return 0;
 }
+
+
+
+/**
+ * @brief unmount file system fs
+ * 
+ * @param fs        file system number
+ * @return int      0 on success, -1 on error
+ */
+int unmount(fsnum_t fs)
+{
+  ASSERT(fs > 0 && fs <= MAXFS);
+  isuperblock_t *isbk = getisblock(fs);
+  if (!isbk->inuse) {
+    /// @todo set error no such file system
+    return -1;
+  }
+  if (!isbk->mounted) {
+    /// @todo set error file system not mounted
+    return -1;
+  }
+  if (activeinodes(fs) > 0) {
+    /// @todo set error file system still in use
+    return -1;
+  }
+  isbk->mounted->fsmnt = 0;
+  iput(isbk->mounted);
+  isbk->mounted = NULL;
+  isbk->pfs = 0;
+  isbk->pino = 0;
+  isbk->inuse = false;
+  return 0;
+}

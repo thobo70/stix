@@ -12,14 +12,16 @@
 #ifndef _BLOCKS_H
 #define _BLOCKS_H
 
-struct iinode_t;
-
 #include "buf.h"
 #include "inode.h"
 #include "tdefs.h"
 
 #define NFREEINODES 50
 #define NFREEBLOCKS 50
+
+#define LDEVFROMFS(fs)  (getisblock(fs)->dev)        ///< ldev of fs from super block
+#define LDEVFROMINODE(i)  (getisblock(i->fs)->dev)   ///< ldev of fs from inode
+
 
 typedef struct superblock {
     dword_t magic;
@@ -60,5 +62,7 @@ bhead_t *balloc(fsnum_t fs);
 void bfree(fsnum_t fs, block_t  bl);
 
 int mount(ldev_t dev, iinode_t *ii, ninode_t pino);
+
+int unmount(fsnum_t fs);
 
 #endif

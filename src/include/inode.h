@@ -12,10 +12,7 @@
 #ifndef _INODE_H
 #define _INODE_H
 
-struct isuperblock_t;
-
 #include "tdefs.h"
-#include "blocks.h"
 #include "dd.h"
 #include "clist.h"
 
@@ -23,9 +20,6 @@ struct isuperblock_t;
 
 #define NBLOCKREFS 20       ///< number of block references in inode
 #define STARTREFSLEVEL 18   ///< index of start of reference levels > 0
-
-#define LDEVFROMFS(fs)  (getisblock(fs)->dev)        ///< ldev of fs from super block
-#define LDEVFROMINODE(i)  (getisblock(i->fs)->dev)   ///< ldev of fs from inode
 
 enum ftype {
   IFREE = 0,
@@ -131,5 +125,7 @@ namei_t namei(const char *p);
 bmap_t bmap(iinode_t *inode, fsize_t pos);
 
 void free_all_blocks(iinode_t *inode);
+
+int activeinodes(fsnum_t fs);
 
 #endif

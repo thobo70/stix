@@ -12,6 +12,7 @@
 #include "tdefs.h"
 
 #include "fs.h"
+#include "blocks.h"
 #include "inode.h"
 #include "utils.h"
 #include "buf.h"

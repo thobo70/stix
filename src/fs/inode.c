@@ -584,3 +584,26 @@ namei_t namei(const char *p)
   rtn.i = wi;
   return rtn;
 }
+
+
+
+/**
+ * @brief returns number of active inodes in fs
+ * 
+ * @param fs 
+ * @return int 
+ */
+int activeinodes(fsnum_t fs)
+{
+  ASSERT(fs > 0 && fs <= MAXFS);
+  int rtn = 0;
+  iinode_t *ii;
+  for ( int i = 0 ; i < NINODES ; ++i ) {
+    ii = &iinode[i];
+    if (ii->nref == 0)
+      continue;
+    if (ii->fs == fs)
+      rtn++;
+  }
+  return rtn;
+}
