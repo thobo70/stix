@@ -526,6 +526,7 @@ namei_t namei(const char *p)
     int skip = false;
     if (sncmp(p, "..", ps) == 0) {
       if (wi == active->u->fsroot) {  // if *p is ".." and wi is root then continue with next path part
+        /// @todo potentional error when active->u->fsroot is root of a mounted fs (chroot("/mnt"); mount /dev/hddb1 /mnt)
         skip = true;
       } else if (wi->inum == 1) {     // if *p is ".." and wi is root of mounted fs then retrieve parent fs
         skip = true;

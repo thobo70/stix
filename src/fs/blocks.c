@@ -203,3 +203,30 @@ void bfree(fsnum_t fs, block_t  bl)
   brelse(bh);
 }
 
+
+
+/**
+ * @brief mount file system on device dev to inode ii (pino is inode number of parent inode)
+ * 
+ * @param dev       device number of file system
+ * @param ii        inode where file system is mounted on
+ * @param pino      inode number of parent inode
+ * @return int      0 on success, -1 on error
+ */
+int mount(ldev_t dev, iinode_t *ii, ninode_t pino)
+{
+  ASSERT(dev.major > 0);
+  ASSERT(ii);
+  ASSERT(ii->dinode.ftype == DIRECTORY);
+  ASSERT(pino > 0);
+  fsnum_t fs = init_isblock(dev);
+  if (!fs) {
+    /// @todo set error no free superblock
+    return -1;
+  }
+  isuperblock_t *isbk = getisblock(fs);
+  isbk->mounted = ii;
+  isbk->pfs = ii->fs;
+  isbk->pino = pino;
+  return 0;
+}

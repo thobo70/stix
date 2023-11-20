@@ -59,4 +59,6 @@ bhead_t *balloc(fsnum_t fs);
 
 void bfree(fsnum_t fs, block_t  bl);
 
+int mount(ldev_t dev, iinode_t *ii, ninode_t pino);
+
 #endif
