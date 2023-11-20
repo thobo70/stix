@@ -8,6 +8,8 @@
  * @copyright Copyright (c) 2023
  * 
  */
+
+#include "tdefs.h"
 #include "inode.h"
 #include "blocks.h"
 #include "buf.h"
@@ -341,6 +343,7 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
   ASSERT(fs < MAXFS);
   ASSERT(inum < getisblock(fs)->dsblock.ninodes);
   for(;;) {
+    ASSERT(fs == getisblock(fs)->fs);
     i = HTAB(fs, inum);
     for ( found = i ; found ; found = (found->hnext == i) ? NULL : found->hnext )
       if ((found->fs == fs) && (found->inum == inum))
@@ -350,7 +353,11 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
         waitfor(INODELOCKED);
         continue;
       }
-      /// @todo mount points !!!
+      if (found->fsmnt) {
+        fs = found->fsmnt;
+        inum = 1;
+        continue;
+      }
       remove_inode_from_freelist(found);
       found->nref++;
       return found;
@@ -516,7 +523,20 @@ namei_t namei(const char *p)
       iput(wi);
       return rtn;
     }
-    if ((sncmp(p, "..", ps) != 0) || (wi != active->u->fsroot)) {  // if *p is ".." and wi is root then continue
+    int skip = false;
+    if (sncmp(p, "..", ps) == 0) {
+      if (wi == active->u->fsroot) {  // if *p is ".." and wi is root then continue with next path part
+        skip = true;
+      } else if (wi->inum == 1) {     // if *p is ".." and wi is root of mounted fs then retrieve parent fs
+        skip = true;
+        iput(wi);
+        isuperblock_t *isbk = getisblock(wi->fs);
+        wi = iget(isbk->pfs, isbk->pino);
+        rtn.p = wi->inum;
+        rtn.fs = wi->fs;
+      } 
+    }
+    if (!skip) {  
       if (wi->dinode.ftype != DIRECTORY) {
         /// @todo set error no dir
         iput(wi);
@@ -540,7 +560,7 @@ namei_t namei(const char *p)
           rtn.p = wi->inum;       // parent inode
           rtn.fs = wi->fs;
           iput(wi);
-          wi = iget(fs, de->inum);
+          wi = iget(fs, de->inum);  // iget take care of mounted fs
           found = true;
         }
         brelse(bh);

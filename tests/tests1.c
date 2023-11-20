@@ -39,6 +39,7 @@ cdev_t *cdevtable[] = {
   &tstcon
 };
 
+fsnum_t fs1;
 
 
 /* run at the start of the suite */
@@ -118,15 +119,16 @@ static void test_buffer_pass(void) {
 
 
 static void test_block_pass(void) {
-  init_isblock(0, (ldev_t){{0, 0}});  // init superblock FS = 0 , device = 0
+  fs1 = init_isblock((ldev_t){{0, 0}});  // init superblock device = 0, should return fs1 = 1
+  CU_ASSERT_EQUAL(fs1, 1);
 
-  bhead_t *b = balloc(0);
+  bhead_t *b = balloc(fs1);
   CU_ASSERT_EQUAL(b->block, 6);
-  bfree(0, b->block);
+  bfree(fs1, b->block);
   brelse(b);
-  b = balloc(0);
+  b = balloc(fs1);
   CU_ASSERT_EQUAL(b->block, 6);
-  bfree(0, b->block);
+  bfree(fs1, b->block);
   brelse(b);
 }
  
@@ -134,9 +136,9 @@ static void test_block_pass(void) {
 
 static void test_inode_pass(void) {
   namei_t i;
-  active->u->fsroot = iget(0, 1);
+  active->u->fsroot = iget(fs1, 1);
   CU_ASSERT_PTR_NOT_NULL_FATAL(active->u->fsroot);
-  active->u->workdir = iget(0, 1);
+  active->u->workdir = iget(fs1, 1);
   CU_ASSERT_PTR_NOT_NULL_FATAL(active->u->workdir);
   CU_ASSERT_EQUAL(active->u->fsroot, active->u->workdir);
   CU_ASSERT_EQUAL(active->u->fsroot->nref, 2);

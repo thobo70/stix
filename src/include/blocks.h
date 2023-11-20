@@ -12,7 +12,10 @@
 #ifndef _BLOCKS_H
 #define _BLOCKS_H
 
+struct iinode_t;
+
 #include "buf.h"
+#include "inode.h"
 #include "tdefs.h"
 
 #define NFREEINODES 50
@@ -34,7 +37,12 @@ typedef struct isuperblock {
     superblock_t dsblock;
     word_t locked : 1;
     word_t modified : 1;
+    word_t inuse : 1;
+    fsnum_t fs;
     ldev_t dev;
+    struct iinode_t *mounted;
+    fsnum_t pfs;        // parent fs of mounted fs
+    ninode_t pino;      // parent inode of mounting inode (mounted)
     word_t nfinodes;
     ninode_t finode[NFREEINODES];
     ninode_t lastfinode;
@@ -43,7 +51,7 @@ typedef struct isuperblock {
     block_t lastfblock;
 } isuperblock_t;
 
-void init_isblock(fsnum_t fs, ldev_t dev);
+fsnum_t init_isblock(ldev_t dev);
 
 isuperblock_t *getisblock(fsnum_t fs);
 

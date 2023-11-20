@@ -79,55 +79,53 @@ add_test(
 )
 set_property(TEST tests1 PROPERTY TIMEOUT "10")
 
-if(NOT ${CMAKE_BUILD_TYPE} STREQUAL "Workflow1")
-  find_package(Java 8 COMPONENTS Runtime)
+find_package(Java 8 COMPONENTS Runtime)
 
-  file(
-    DOWNLOAD 
-    https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar.asc 
-    ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc
-    SHOW_PROGRESS
-    TIMEOUT 10
-    STATUS DOWNLOAD_STATUS
-  )
-  list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
-  list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
-  message("downloading plantuml.jar.asc: ${ERROR_MESSAGE}")
-  if (STATUS_CODE EQUAL 0)
-    file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc PLANTUML_NEW)
-    file(TOUCH ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
-    file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old PLANTUML_OLD)
-    if (NOT PLANTUML_NEW STREQUAL PLANTUML_OLD)
-      file(
-        DOWNLOAD
-        https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
-        ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar
-        TIMEOUT 10
-        SHOW_PROGRESS
-      )  
-      file(RENAME ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
-    endif()
+file(
+  DOWNLOAD 
+  https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar.asc 
+  ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc
+  SHOW_PROGRESS
+  TIMEOUT 10
+  STATUS DOWNLOAD_STATUS
+)
+list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+list(GET DOWNLOAD_STATUS 1 ERROR_MESSAGE)
+message("downloading plantuml.jar.asc: ${ERROR_MESSAGE}")
+if (STATUS_CODE EQUAL 0)
+  file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc PLANTUML_NEW)
+  file(TOUCH ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
+  file(READ ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old PLANTUML_OLD)
+  if (NOT PLANTUML_NEW STREQUAL PLANTUML_OLD)
+    file(
+      DOWNLOAD
+      https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar
+      ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar
+      TIMEOUT 10
+      SHOW_PROGRESS
+    )  
+    file(RENAME ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc.old)
   endif()
-
-  find_package(
-    Doxygen
-    REQUIRED doxygen dot
-    OPTIONAL_COMPONENTS mscgen dia
-  )
-
-  set(DOXYGEN_EXCLUDE_PATTERNS  */build/*)
-  set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
-  set(DOXYGEN_GENERATE_HTML YES)
-  set(DOXYGEN_GENERATE_MAN YES)
-  set(DOXYGEN_GENERATE_LATEX YES)
-  set(DOXYGEN_CALL_GRAPH YES)
-  set(DOXYGEN_CALLER_GRAPH YES)
-  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
-  set(DOXYGEN_PLANTUML_JAR_PATH "${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar")
-  set(DOXYGEN_IMAGE_PATH "${PROJECT_SOURCE_DIR}")
-  set(DOXYGEN_WARN_LOGFILE "DoxygenWarningLog.txt")
-
-  doxygen_add_docs(
-    docs
-  )
 endif()
+
+find_package(
+  Doxygen
+  REQUIRED doxygen dot
+  OPTIONAL_COMPONENTS mscgen dia
+)
+
+set(DOXYGEN_EXCLUDE_PATTERNS  */build/*)
+set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
+set(DOXYGEN_GENERATE_HTML YES)
+set(DOXYGEN_GENERATE_MAN YES)
+set(DOXYGEN_GENERATE_LATEX YES)
+set(DOXYGEN_CALL_GRAPH YES)
+set(DOXYGEN_CALLER_GRAPH YES)
+set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
+set(DOXYGEN_PLANTUML_JAR_PATH "${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar")
+set(DOXYGEN_IMAGE_PATH "${PROJECT_SOURCE_DIR}")
+set(DOXYGEN_WARN_LOGFILE "DoxygenWarningLog.txt")
+
+doxygen_add_docs(
+  docs
+)

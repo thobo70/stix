@@ -12,6 +12,8 @@
 #ifndef _INODE_H
 #define _INODE_H
 
+struct isuperblock_t;
+
 #include "tdefs.h"
 #include "blocks.h"
 #include "dd.h"
@@ -64,6 +66,7 @@ typedef struct iinode_t
   nref_t nref;
   clist_t *rclist;
   clist_t *wclist;
+  fsnum_t fsmnt;
   struct iinode_t *hprev;
   struct iinode_t *hnext;
   struct iinode_t *fprev;

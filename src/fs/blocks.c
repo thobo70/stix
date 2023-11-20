@@ -22,8 +22,8 @@ isuperblock_t isblock[MAXFS];
 
 isuperblock_t *getisblock(fsnum_t fs)
 {
-  ASSERT(fs < MAXFS);
-  return &isblock[fs];
+  ASSERT(fs > 0 && fs <= MAXFS);
+  return &isblock[fs - 1];
 }
 
 #define BMAPBLOCK(idx)  (idx / (BLOCKSIZE * 8))
@@ -32,15 +32,32 @@ isuperblock_t *getisblock(fsnum_t fs)
 
 
 
-void init_isblock(fsnum_t fs, ldev_t dev)
+fsnum_t init_isblock(ldev_t dev)
 {
-  ASSERT(fs < MAXFS);
+  fsnum_t fs;
+  for ( fs = 0 ; fs < MAXFS ; ++fs ) {
+    if (!isblock[fs].inuse) {
+      break;
+    }
+  }
+  if (fs == MAXFS) {
+    /// @todo set error no free superblock
+    return 0;
+  }
+  ++fs;
   isuperblock_t *isbk = getisblock(fs);
   bhead_t *bh = bread(dev, 1);  // read superblock
+  if (bh->error) {
+    /// @todo set error reading superblock
+    return 0;
+  }
   mset(isbk, 0, sizeof(isuperblock_t));
+  isbk->fs = fs;
   isbk->dev = dev;
   mcpy(&isbk->dsblock, bh->buf->mem, sizeof(superblock_t));
   brelse(bh);
+  isbk->inuse = true;
+  return fs;
 }
 
 
