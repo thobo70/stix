@@ -42,7 +42,7 @@ typedef struct isuperblock {
     word_t inuse : 1;
     fsnum_t fs;
     ldev_t dev;
-    struct iinode_t *mounted;
+    iinode_t *mounted;
     fsnum_t pfs;        // parent fs of mounted fs
     ninode_t pino;      // parent inode of mounting inode (mounted)
     word_t nfinodes;
