@@ -19,6 +19,14 @@
 #include "pc.h"
 
 
+
+typedef struct {    ///< @see igetpdir
+  iinode_t *pi;     ///< parent inode
+  ninode_t child;   ///< child inode number
+} pdir_t;
+
+
+
 filetab_t filetab[MAXFILETAB];  ///< file table
 
 
@@ -994,4 +1002,114 @@ int dup(int fdesc)
   active->u->fdesc[fdesc2] = active->u->fdesc[fdesc];
   active->u->fdesc[fdesc2].ftabent->refs++;
   return fdesc2;
+}
+
+
+/**
+ * @brief get parent inode of directory (another directory)
+ * 
+ * assumption is that the 2nd entry in the directory is the link to the parent directory (..  entry)
+ * 
+ * @param ii 
+ * @return pdir_t   parent directory inode and child inode number
+ */
+pdir_t igetpdir(iinode_t *ii)
+{
+  pdir_t rtn = {NULL, 0};
+  ASSERT(ii);
+  ASSERT(ii->dinode.ftype == DIRECTORY);
+  ASSERT(ii->dinode.fsize % sizeof(dirent_t) == 0);
+  ASSERT(ii->dinode.fsize >= 2 * sizeof(dirent_t));
+  ASSERT(ii);
+  if (ii->inum == 1) {            // root directory of fs
+    isuperblock_t *isbk = getisblock(ii->fs);
+    ASSERT(isbk);
+    if (isbk->mounted) {     // is fs mounted ?
+      rtn.pi = iget(isbk->pfs, isbk->pino);
+      ASSERT(rtn.pi);
+      rtn.child = isbk->mounted->inum;
+      return rtn;
+    } 
+  }
+  bmap_t b = bmap(ii, 1 * sizeof(dirent_t));    // 2nd entry in directory
+  ASSERT(b.fsblock > 0);
+  bhead_t *bh = bread(LDEVFROMINODE(ii), b.fsblock);
+  dirent_t *de = (dirent_t *)&bh->buf->mem[b.offblock];
+  ASSERT(de->inum > 0);
+  ASSERT(sncmp(de->name, "..", DIRNAMEENTRY) == 0);
+  rtn.pi = iget(ii->fs, de->inum);
+  brelse(bh);
+  ASSERT(rtn.pi);
+  rtn.child = ii->inum;
+  return rtn;
+}
+
+
+
+/**
+ * @brief get current working directory path
+ * 
+ * @param buf   buffer to store path
+ * @param len   buffer length
+ * @return char*  path
+ */
+char *getcwd(char *buf, sizem_t len)
+{
+  if (!buf || len < 2) {
+    /// @todo error invalid buffer
+    return NULL;
+  }
+  iinode_t *ii = iget(active->u->workdir->fs, active->u->workdir->inum);
+  ASSERT(ii);
+  buf[--len] = '\0';
+  while (true)
+  {
+    ASSERT(ii->dinode.ftype == DIRECTORY);
+    ASSERT(ii->dinode.fsize % sizeof(dirent_t) == 0);
+    if (ii == active->u->fsroot)
+      break;
+    pdir_t p = igetpdir(ii);
+    ASSERT(p.pi);
+    ASSERT(p.child > 0);
+    iput(ii);
+    ii = p.pi;
+    int n = ii->dinode.fsize / sizeof(dirent_t);
+    ASSERT(n >= 2);
+    int found = false;
+    for (int i = 0; i < n; i++) {
+      bmap_t b = bmap(ii, i * sizeof(dirent_t));
+      ASSERT(b.fsblock > 0);
+      bhead_t *bh = bread(LDEVFROMINODE(ii), b.fsblock);    /// @todo can be optimized 
+      dirent_t *de = (dirent_t *)&bh->buf->mem[b.offblock];
+      if (de->inum == p.child) {
+        sizem_t bl = snlen(de->name, DIRNAMEENTRY);
+        if (len < bl + 1) {
+          /// @todo error buffer too small
+          iput(ii);
+          return NULL;
+        }
+        mcpy(&buf[len - bl], de->name, bl);
+        len -= bl;
+        buf[--len] = '/';
+        brelse(bh);
+        found = true;
+        break;
+      }
+      brelse(bh);
+    }
+    if (!found) {
+      /// @todo error parent directory not found
+      iput(ii);
+      return NULL;
+    }
+  }
+  if (len > 0) {
+    if (buf[len] != 0)
+      sncpy(buf, &buf[len], snlen(&buf[len], MAXPATH - len));
+    else {
+      buf[0] = '/';
+      buf[1] = '\0';
+    }
+  }
+  return buf;
 }
