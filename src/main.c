@@ -9,12 +9,12 @@
  * 
  */
 
-#include <stdio.h>
 
 #include "dd.h"
 #include "inode.h"
 #include "buf.h"
-
+#include "fs.h"
+#include "clist.h"
 
 bdev_t *bdevtable[] = {
   NULL
@@ -37,9 +37,9 @@ int main(void)
   ddinit();
   init_buffers();
   init_inodes();
+  init_fs(); 
+  init_clist();
   
-  printf(" %ld %ld %ld %ld\n", sizeof(char), sizeof(short), sizeof(int), sizeof(ftype_t));
-  printf("dinode: %ld\n", sizeof(dinode_t));
   
   return 0;
 }

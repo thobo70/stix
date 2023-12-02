@@ -85,7 +85,6 @@ file(
   DOWNLOAD 
   https://github.com/plantuml/plantuml/releases/latest/download/plantuml.jar.asc 
   ${PROJECT_SOURCE_DIR}/plantuml/plantuml.jar.asc
-  SHOW_PROGRESS
   TIMEOUT 10
   STATUS DOWNLOAD_STATUS
 )

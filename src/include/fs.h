@@ -71,9 +71,9 @@ int chdir(const char *path);
 int chroot(const char *path);
 int chmod(const char *path, fmode_t fmode);
 int chown(const char *path, user_t uid, group_t gid);
-// int getcwd(char *buf, size_t size);
-// int mount(const char *dev, const char *path, const char *fs);
-// int umount(const char *path);
+char *getcwd(char *buf, sizem_t size);
+int mount(const char *src, const char *dst, int mflags);    // mount file system in blocks.c
+int umount(const char *path);                               // umount file system in blocks.c
 // int opendir(const char *path);
 // int closedir(int fd);
 // int readdir(int fd, dirent_t *buf);

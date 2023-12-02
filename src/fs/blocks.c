@@ -34,12 +34,17 @@ isuperblock_t *getisblock(fsnum_t fs)
 
 fsnum_t init_isblock(ldev_t dev)
 {
-  fsnum_t fs;
+  fsnum_t fs, freefs = MAXFS;
   for ( fs = 0 ; fs < MAXFS ; ++fs ) {
-    if (!isblock[fs].inuse) {
-      break;
+    if (isblock[fs].inuse) {
+      if (isblock[fs].dev.ldev == dev.ldev)
+        return fs + 1;
+    } else {
+      if (freefs == MAXFS)
+        freefs = fs;
     }
   }
+  fs = freefs;
   if (fs == MAXFS) {
     /// @todo set error no free superblock
     return 0;
@@ -213,22 +218,74 @@ void bfree(fsnum_t fs, block_t  bl)
  * @param pino      inode number of parent inode
  * @return int      0 on success, -1 on error
  */
-int mount(ldev_t dev, iinode_t *ii, ninode_t pino)
+int mounti(ldev_t dev, iinode_t *ii, ninode_t pino, int mflags)
 {
   ASSERT(dev.major > 0);
   ASSERT(ii);
   ASSERT(ii->dinode.ftype == DIRECTORY);
   ASSERT(pino > 0);
   fsnum_t fs = init_isblock(dev);
-  if (!fs) {
+  if (fs == 0) {
     /// @todo set error no free superblock
     return -1;
   }
   isuperblock_t *isbk = getisblock(fs);
+  if (isbk->mounted) {
+    /// @todo set error file system already mounted
+    return -1;
+  }
   isbk->mounted = ii;
   isbk->pfs = ii->fs;
   isbk->pino = pino;
+  isbk->mflags = mflags;
   return 0;
+}
+
+
+
+
+int mount(const char *src, const char *dst, int mflags)
+{
+  ASSERT(src);
+  ASSERT(dst);
+  ASSERT(snlen(src, MAXPATH + 1) < MAXPATH);
+  ASSERT(snlen(dst, MAXPATH + 1) < MAXPATH);
+  /*
+  ASSERT(mflags & MS_RDONLY || mflags & MS_RDWR);
+  ASSERT(mflags & MS_NOSUID || mflags & MS_SUID);
+  ASSERT(mflags & MS_NODEV || mflags & MS_DEV);
+  ASSERT(mflags & MS_NOEXEC || mflags & MS_EXEC);
+  ASSERT(mflags & MS_NOATIME || mflags & MS_ATIME);
+  ASSERT(mflags & MS_NODIRATIME || mflags & MS_DIRATIME);
+  ASSERT(mflags & MS_NOSYMFOLLOW || mflags & MS_SYMFOLLOW);
+  ASSERT(mflags & MS_NOUSER || mflags & MS_USER);
+  ASSERT(mflags & MS_NOROOT || mflags & MS_ROOT);
+  ASSERT(mflags & MS_NOSUB || mflags & MS_SUB);
+  */
+
+  namei_t dstni = namei(dst);
+  if (!dstni.i || dstni.p == 0) {
+    /// @todo set error
+    return -1;
+  }
+  if (dstni.i->dinode.ftype != DIRECTORY) {
+    /// @todo set error
+    return -1;
+  }
+  if (dstni.i->fsmnt == 0) {
+    /// @todo set error
+    return -1;
+  }
+  namei_t srcni = namei(src);
+  if (!srcni.i) {
+    /// @todo set error
+    return -1;
+  }
+  if (srcni.i->dinode.ftype != BLOCK) {
+    /// @todo set error
+    return -1;
+  }  
+  return mounti(srcni.i->dinode.ldev, dstni.i, dstni.p, mflags);
 }
 
 
@@ -262,4 +319,26 @@ int unmount(fsnum_t fs)
   isbk->pino = 0;
   isbk->inuse = false;
   return 0;
+}
+
+
+
+int umount(const char *path)
+{
+  ASSERT(path);
+  ASSERT(snlen(path, MAXPATH + 1) < MAXPATH);
+  namei_t ni = namei(path);
+  if (!ni.i) {
+    /// @todo set error
+    return -1;
+  }
+  if (ni.i->dinode.ftype != DIRECTORY) {
+    /// @todo set error
+    return -1;
+  }
+  if (ni.i->fsmnt == 0) {
+    /// @todo set error
+    return -1;
+  }
+  return unmount(ni.i->fsmnt);
 }

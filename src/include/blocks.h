@@ -40,6 +40,7 @@ typedef struct isuperblock {
     word_t locked : 1;
     word_t modified : 1;
     word_t inuse : 1;
+    int mflags;
     fsnum_t fs;
     ldev_t dev;
     iinode_t *mounted;
@@ -60,9 +61,5 @@ isuperblock_t *getisblock(fsnum_t fs);
 bhead_t *balloc(fsnum_t fs);
 
 void bfree(fsnum_t fs, block_t  bl);
-
-int mount(ldev_t dev, iinode_t *ii, ninode_t pino);
-
-int unmount(fsnum_t fs);
 
 #endif
