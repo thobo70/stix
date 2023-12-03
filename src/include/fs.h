@@ -74,6 +74,7 @@ int chown(const char *path, user_t uid, group_t gid);
 char *getcwd(char *buf, sizem_t size);
 int mount(const char *src, const char *dst, int mflags);    // mount file system in blocks.c
 int umount(const char *path);                               // umount file system in blocks.c
+int sync(void);                                             // sync file system 
 // int opendir(const char *path);
 // int closedir(int fd);
 // int readdir(int fd, dirent_t *buf);

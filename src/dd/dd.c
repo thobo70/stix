@@ -20,14 +20,23 @@ int nbdeventries = 0;
 int ncdeventries = 0;
 
 
-void ddinit(void)
+
+/**
+ * @brief initialize device drivers
+ * 
+ */
+void init_dd(void)
 {
   int i;
 
-  for (i = 0; bdevtable[i] ; i++);
+  for (i = 0; bdevtable[i] ; i++)
+    if (bdevtable[i]->init)
+      bdevtable[i]->init();
   nbdeventries = i;
 
-  for (i = 0; cdevtable[i] ; i++);
+  for (i = 0; cdevtable[i] ; i++)
+    if (cdevtable[i]->init)
+      cdevtable[i]->init();
   ncdeventries = i;
 }
 

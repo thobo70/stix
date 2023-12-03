@@ -55,6 +55,7 @@ void tstdisk_close(ldevminor_t minor);
 void tstdisk_strategy(ldevminor_t minor, bhead_t *bh);
 
 bdev_t tstdisk = {
+  NULL,
   tstdisk_open,
   tstdisk_close,
   tstdisk_strategy

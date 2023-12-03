@@ -18,12 +18,14 @@
 #define BLOCKSIZE 512
 
 typedef struct bdev_t {
+  void (*init)(void);  
   void (*open)(ldevminor_t minor);
   void (*close)(ldevminor_t minor);
   void (*strategy)(ldevminor_t minor, bhead_t *bh);
 } bdev_t;
 
 typedef struct cdev_t {
+  void (*init)(void);  
   void (*open)(ldevminor_t minor);
   void (*close)(ldevminor_t minor);
   void (*read)(ldevminor_t minor, byte_t cl);
@@ -31,7 +33,7 @@ typedef struct cdev_t {
   void (*ioctl)(ldevminor_t minor, int cmd, void *arg);
 } cdev_t;
 
-void ddinit(void);
+void init_dd(void);
 
 void bdevopen(ldev_t ldev);
 void bdevclose(ldev_t ldev);

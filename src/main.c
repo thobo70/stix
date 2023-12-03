@@ -34,11 +34,11 @@ cdev_t *cdevtable[] = {
  */
 int main(void)
 {
-  ddinit();
+  init_clist();
+  init_dd();
   init_buffers();
   init_inodes();
   init_fs(); 
-  init_clist();
   
   
   return 0;

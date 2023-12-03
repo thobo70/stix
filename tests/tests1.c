@@ -44,7 +44,7 @@ fsnum_t fs1;
 
 /* run at the start of the suite */
 CU_SUITE_SETUP() {
-  ddinit();
+  init_dd();
   init_buffers();
   init_inodes();
   init_fs(); 

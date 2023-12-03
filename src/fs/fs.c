@@ -1113,3 +1113,16 @@ char *getcwd(char *buf, sizem_t len)
   }
   return buf;
 }
+
+
+
+/**
+ * @brief sync file system
+ * 
+ * @return int 
+ */
+int sync(void)
+{
+  syncall_buffers(false);
+  return 0;
+}

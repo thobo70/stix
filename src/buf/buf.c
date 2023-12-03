@@ -88,20 +88,25 @@ void add_buf_to_freelist(bhead_t *b, int asFirst)
  */
 void syncall_buffers(int async)
 {
-  bhead_t *b = freelist, *bl = NULL;
-  do
-  {
-    if (!b)
-      break;
+  bhead_t *b = freelist, *bl = NULL, *bn = NULL;
+  if (!b)
+    return;
+  freelist = NULL;
+  ASSERT(b->fnext && b->fprev);
+  ASSERT(b->fprev->fnext == b);
+  b->fprev->fnext = NULL;
+  for ( ; b ; b = bn ) {
+    bn = b->fnext;    // remember next buffer, because add_buf_to_freelist will change it
+    ASSERT(b->infreelist == true);
+    ASSERT(b->fnext != b);
+    b->infreelist = false;
     if (b->dwrite) {
-      remove_buf_from_freelist(b);
       sync_buffer_to_disk(b);
       bl = b;         // remember last buffer if we have to wait for it
-      b = freelist;   // list has changed therefore restart
-      continue;
-    }
-    b = b->fnext;
-  } while (b != freelist);
+    } else 
+      add_buf_to_freelist(b, false);
+  }
+  wakeall(NOFREEBLOCKS);
   if (bl && !async)
     while (!bl->written)
       waitfor(BLOCKWRITE);

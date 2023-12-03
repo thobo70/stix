@@ -30,6 +30,7 @@ void tstcon_write(ldevminor_t minor, byte_t cl);
 void tstcon_ioctl(ldevminor_t minor, int cmd, void *arg);
 
 cdev_t tstcon = {
+  NULL,
   tstcon_open,
   tstcon_close,
   tstcon_read,
