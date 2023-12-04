@@ -30,13 +30,15 @@ char *tstdisk_getblock(ldevminor_t minor, block_t bidx);
 extern bdev_t tstdisk;
 
 bdev_t *bdevtable[] = {
-  &tstdisk
+  &tstdisk,
+  NULL
 };
 
 extern cdev_t tstcon;
 
 cdev_t *cdevtable[] = {
-  &tstcon
+  &tstcon,
+  NULL
 };
 
 fsnum_t fs1;
