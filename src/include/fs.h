@@ -43,7 +43,7 @@ typedef enum seek_t {
 typedef struct dirent_t {
   ninode_t inum;
   char name[DIRNAMEENTRY];
-} dirent_t;
+} _STRUCTATTR_ dirent_t;
 
 
 typedef struct filetab_t {

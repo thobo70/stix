@@ -27,7 +27,7 @@ typedef struct clist_node_t {
     byte_t tail;    ///< index of tail data
     byte_t head;    ///< index of head data
     char data[MAXNODEDATA]; ///< node data
-} clist_node_t;     ///< node type
+} _STRUCTATTR_ clist_node_t;     ///< node type
 
 /**
  * @brief clist data structure
@@ -38,7 +38,7 @@ typedef struct clist_t {
     byte_t tail;    ///< index of tail node
     sizem_t size;   ///< size of list
     byte_t locked : 1;  ///< list locked
-} clist_t;          ///< clist type
+} _STRUCTATTR_ clist_t;          ///< clist type
 
 // Function prototypes
 void init_clist(void);

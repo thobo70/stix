@@ -33,7 +33,7 @@ typedef struct superblock {
     block_t firstblock;
     ninode_t ninodes;
     block_t nblocks;
-} superblock_t;
+} _STRUCTATTR_ superblock_t;
 
 typedef struct isuperblock {
     superblock_t dsblock;
@@ -52,7 +52,7 @@ typedef struct isuperblock {
     word_t nfblocks;
     block_t fblocks[NFREEBLOCKS];
     block_t lastfblock;
-} isuperblock_t;
+} _STRUCTATTR_ isuperblock_t;
 
 fsnum_t init_isblock(ldev_t dev);
 

@@ -18,8 +18,8 @@
 
 #define NINODES 50          ///< number of inodes in system
 
-#define NBLOCKREFS 20       ///< number of block references in inode
-#define STARTREFSLEVEL 18   ///< index of start of reference levels > 0
+#define NBLOCKREFS 21       ///< number of block references in inode
+#define STARTREFSLEVEL 19   ///< index of start of reference levels > 0
 
 enum ftype {
   IFREE = 0,
@@ -47,7 +47,7 @@ typedef struct dinode_t {
     block_t blockrefs[NBLOCKREFS];
     ldev_t ldev;
   };
-} dinode_t;
+} _STRUCTATTR_ dinode_t;
 
 /// @brief in core inode
 typedef struct iinode_t
@@ -65,7 +65,7 @@ typedef struct iinode_t
   struct iinode_t *hnext;
   struct iinode_t *fprev;
   struct iinode_t *fnext;
-} iinode_t;
+} _STRUCTATTR_ iinode_t;
 
 typedef struct stat_t {
   ftype_t ftype;
@@ -77,20 +77,20 @@ typedef struct stat_t {
   nlinks_t nlinks;
   fsize_t fsize;
   ldev_t ldev;
-} stat_t;
+} _STRUCTATTR_ stat_t;
 
 typedef struct bmap_t {
   block_t fsblock;
   fsize_t offblock;
   fsize_t nbytesleft;
   block_t rdablock;
-} bmap_t;
+} _STRUCTATTR_ bmap_t;
 
 typedef struct namei_t {
   iinode_t *i;
   ninode_t p;
   fsnum_t fs;
-} namei_t;
+} _STRUCTATTR_ namei_t;
 
 #define NINODESBLOCK  ((block_t)( BLOCKSIZE / sizeof(dinode_t) ))
 

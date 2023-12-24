@@ -4,7 +4,7 @@ project(
   os
   VERSION 0.0.1
   DESCRIPTION "a clone of an early unix"
-  LANGUAGES C 
+  LANGUAGES C ASM
 )
 
 include(FetchContent)
@@ -15,10 +15,10 @@ FetchContent_Declare(
   GIT_TAG        3.2.7
 )
 
-FetchContent_MakeAvailable(cunit)
-
 set(CUNIT_DISABLE_TESTS ON CACHE BOOL "Disable CUnit tests" FORCE)
 set(CUNIT_DISABLE_EXAMPLES ON CACHE BOOL "Disable CUnit examples" FORCE)
+
+FetchContent_MakeAvailable(cunit)
 
 set(SRC 
   src/buf/buf.c
@@ -31,8 +31,6 @@ set(SRC
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -pedantic-errors")
-
-# add_subdirectory(${cunit_SOURCE_DIR}/CUnit)
 
 include(CTest)
 

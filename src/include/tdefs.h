@@ -12,6 +12,8 @@
 #ifndef _TDEFS_H
 #define _TDEFS_H
 
+#define _STRUCTATTR_ __attribute__((packed))
+
 typedef unsigned char byte_t;
 typedef unsigned short word_t;
 typedef unsigned int dword_t;
@@ -44,7 +46,7 @@ typedef union ldev_t {
   struct {
     ldevmajor_t major;
     ldevminor_t minor;
-  };
+  } _STRUCTATTR_;
   word_t ldev;
 } ldev_t;
 
