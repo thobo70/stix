@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
   cunit
   GIT_REPOSITORY https://gitlab.com/cunity/cunit.git
-  GIT_TAG        3.2.7
+  GIT_TAG 9cf44aa3a37cfa5570dd70e122b09bfa6e711fee
 )
 
 set(CUNIT_DISABLE_TESTS ON CACHE BOOL "Disable CUnit tests" FORCE)
@@ -30,7 +30,7 @@ set(SRC
   src/util/utils.c
 )
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -pedantic-errors")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra -pedantic-errors")
 
 include(CTest)
 
@@ -40,8 +40,6 @@ add_executable(
   src/pc/pc.c
   ${SRC}
 )
-
-set_target_properties( mockup PROPERTIES COMPILE_FLAGS "-Wextra" )
 
 target_include_directories(
   mockup
@@ -56,8 +54,6 @@ add_executable(
   tests/pc.mockup.c
   ${SRC}
 )
-
-set_target_properties( tests1 PROPERTIES COMPILE_FLAGS "-Wextra" )
 
 target_include_directories(
   tests1
