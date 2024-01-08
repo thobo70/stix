@@ -34,6 +34,21 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra -pedantic-errors")
 
 include(CTest)
 
+# BEGIN: Assemble and link bootsec.s with bootsec.ld to generate bootsec.bin
+add_custom_command(
+  OUTPUT bootsec.bin
+  COMMAND ${CMAKE_ASM_COMPILER} -o bootsec.o -c "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.s"
+  COMMAND ${CMAKE_LINKER} -o bootsec.bin --oformat binary bootsec.o -T "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.ld"
+  BYPRODUCTS bootsec.o
+  DEPENDS src/bootsec/bootsec.s src/bootsec/bootsec.ld
+)
+
+add_custom_target(
+  bootsec ALL
+  DEPENDS bootsec.bin
+)
+# END: Assemble and link bootsec.s with bootsec.ld to generate bootsec.bin
+
 add_executable(
   mockup
   src/main.c
