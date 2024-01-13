@@ -39,6 +39,15 @@ print_msg:
 
 finish:
   cli
+  # send shutdown
+  mov $0x2000, %dx
+  mov $0xB004, %ax
+  outw %ax, %dx        # for bochs and QEMU <2.0
+  mov $0x0604, %dx
+  outw %ax, %dx        # for QEMU
+  mov $0x4004, %ax
+  mov $0x3400, %dx
+  outw %ax, %dx        # for virtual box
   hlt
   jmp finish
 
