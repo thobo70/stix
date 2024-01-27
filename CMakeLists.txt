@@ -15,10 +15,55 @@ FetchContent_Declare(
   GIT_TAG 9cf44aa3a37cfa5570dd70e122b09bfa6e711fee
 )
 
+FetchContent_Declare(
+  bochs
+  GIT_REPOSITORY https://github.com/bochs-emu/Bochs.git
+  GIT_TAG REL_2_7_FINAL
+)
+
 set(CUNIT_DISABLE_TESTS ON CACHE BOOL "Disable CUnit tests" FORCE)
 set(CUNIT_DISABLE_EXAMPLES ON CACHE BOOL "Disable CUnit examples" FORCE)
 
-FetchContent_MakeAvailable(cunit)
+FetchContent_MakeAvailable(cunit bochs)
+
+# message("bochs_SOURCE_DIR: ${bochs_SOURCE_DIR}")
+
+#begin: generate bochs, bochs doesn't have a cmake build system yet
+set(bochs_CONFIGURE_PARAMS
+  --prefix=${CMAKE_BINARY_DIR}    # install to build directory
+  --enable-cpu-level=3            # enable cpu level 3
+  --with-nogui                    # disable gui
+  #--with-x11                      # enable x11
+  #--with-term                     # enable terminal
+)
+
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/bin/bochs
+  WORKING_DIRECTORY ${bochs_SOURCE_DIR}/bochs
+  COMMAND ./configure ${bochs_CONFIGURE_PARAMS} > /dev/null
+  COMMAND make clean > /dev/null
+  COMMAND make > /dev/null
+  COMMAND make install > /dev/null
+  DEPENDS ${bochs_SOURCE_DIR}/bochs
+)
+
+add_custom_command(
+  OUTPUT floppya.img
+  COMMAND cp bootsec.bin floppya.img
+  DEPENDS bootsec.bin
+)
+
+add_custom_command(
+  OUTPUT bochsrc.txt
+  COMMAND cp ${PROJECT_SOURCE_DIR}/tests/bochs/bochsrc.templ bochsrc.txt
+  DEPENDS floppya.img ${PROJECT_SOURCE_DIR}/tests/bochs/bochsrc.templ
+)
+
+add_custom_target(
+  generate-bochs-sim ALL
+  DEPENDS ${CMAKE_BINARY_DIR}/bin/bochs bochsrc.txt
+)
+#end: generate bochs
 
 set(SRC 
   src/buf/buf.c
@@ -87,6 +132,18 @@ add_test(
   COMMAND tests1
 )
 set_property(TEST tests1 PROPERTY TIMEOUT "10")
+
+add_test(
+  NAME bochs_test
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMAND bin/bochs -q -f bochsrc.txt
+)
+# test with bochs would fail, because bochs doesn't support simple shutdown without an error
+# this is a workaround and will be removed when stix will boot and shutdown properly
+set_tests_properties(bochs_test PROPERTIES
+  PASS_REGULAR_EXPRESSION "shutdown\ requested"
+)
+set_property(TEST bochs_test PROPERTY TIMEOUT "10")
 
 find_package(Java 8 COMPONENTS Runtime)
 

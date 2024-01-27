@@ -39,7 +39,27 @@ print_msg:
 
 finish:
   cli
-  # send shutdown
+
+  # Send "Shutdown" to port 0x8900, exit bochs (see in bochs unmapped.cc[237])
+  mov $0x8900, %dx
+  movb $'S', %al
+  outb %al, %dx
+  movb $'h', %al
+  outb %al, %dx
+  movb $'u', %al
+  outb %al, %dx
+  movb $'t', %al
+  outb %al, %dx
+  movb $'d', %al
+  outb %al, %dx
+  movb $'o', %al
+  outb %al, %dx
+  movb $'w', %al
+  outb %al, %dx
+  movb $'n', %al
+  outb %al, %dx
+
+  # send shutdown https://wiki.osdev.org/Shutdown (but seems not to work for bochs)
   mov $0x2000, %dx
   mov $0xB004, %ax
   outw %ax, %dx        # for bochs and QEMU <2.0
