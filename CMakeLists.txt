@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
   cunit
   GIT_REPOSITORY https://gitlab.com/cunity/cunit.git
-  GIT_TAG 9cf44aa3a37cfa5570dd70e122b09bfa6e711fee
+  GIT_TAG master
 )
 
 FetchContent_Declare(
