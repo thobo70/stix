@@ -31,7 +31,51 @@ isuperblock_t *getisblock(fsnum_t fs)
 #define BMAPMASK(idx)   (byte_t)(1 << (idx % 8))
 
 
-
+/**
+ * @brief Initialize superblock for a given device.
+ * 
+ * This function reads the superblock from the device and initializes the superblock for the file system on the device.
+ * 
+ * @startuml
+ * start
+ * :Start;
+ * :Initialize fs, freefs;
+ * :for fs in 0 to MAXFS;
+ * if (isblock[fs].inuse) then (yes)
+ *   if (isblock[fs].dev.ldev == dev.ldev) then (yes)
+ *     :Return fs + 1;
+ *     stop
+ *   endif
+ * else (no)
+ *   if (freefs == MAXFS) then (yes)
+ *     :freefs = fs;
+ *   endif
+ * endif
+ * :endfor;
+ * :fs = freefs;
+ * if (fs == MAXFS) then (yes)
+ *   :Set error: no free superblock;
+ *   :Return 0;
+ *   stop
+ * endif
+ * :Increment fs;
+ * :isbk = getisblock(fs);
+ * :bh = bread(dev, 1);
+ * if (bh->error) then (yes)
+ *   :Set error: reading superblock;
+ *   :Return 0;
+ *   stop
+ * endif
+ * :Initialize isbk with bh;
+ * :Release bh;
+ * :isbk->inuse = true;
+ * :Return fs;
+ * stop
+ * @enduml
+ * 
+ * @param dev The device to initialize the superblock for.
+ * @return fsnum_t The file system number.
+ */
 fsnum_t init_isblock(ldev_t dev)
 {
   fsnum_t fs, freefs = MAXFS;
@@ -160,12 +204,55 @@ bhead_t *balloc(fsnum_t fs)
 
 
 /**
- * @brief free block bl in file system fs
+ * @brief Free a block in a filesystem.
  * 
- * @param fs        file system number
- * @param bl        block to free
- */
-void bfree(fsnum_t fs, block_t  bl)
+ * This function frees a block in the filesystem. It first checks if the block is valid, then it locks the superblock to prevent other processes from modifying it while it's being updated. It then updates the free block list in the superblock and unlocks the superblock. Finally, it updates the block bitmap to indicate that the block is free.
+ * 
+ * @startuml
+ * start
+ * :Start;
+ * :Assert fs < MAXFS and bl > 0;
+ * :isbk = getisblock(fs);
+ * :Assert bl < isbk->dsblock.nblocks;
+ * while (isbk->locked) is (yes)
+ *   :Wait for SBLOCKBUSY;
+ * endwhile (no)
+ * :Lock isbk;
+ * if (isbk->nfblocks >= NFREEBLOCKS) then (yes)
+ *   :isbk->nfblocks = NFREEBLOCKS - 1;
+ *   :isbk->fblocks[isbk->nfblocks] = bl;
+ * elseif (isbk->nfblocks > 0) then (yes)
+ *   if (isbk->fblocks[isbk->nfblocks] > bl) then (yes)
+ *     :isbk->fblocks[--isbk->nfblocks] = bl;
+ *   else (no)
+ *     :for i in isbk->nfblocks + 1 to NFREEBLOCKS;
+ *     if ((isbk->fblocks[i] > bl) or (isbk->fblocks[i] == 0)) then (yes)
+ *       :isbk->fblocks[i] = bl;
+ *       stop
+ *     endif
+ *     :endfor;
+ *   endif
+ * else (no)
+ *   :for i in 0 to NFREEBLOCKS;
+ *   if ((isbk->fblocks[i] > bl) or (isbk->fblocks[i] == 0)) then (yes)
+ *     :isbk->fblocks[i] = bl;
+ *     stop
+ *   endif
+ *   :endfor;
+ * endif
+ * :Unlock isbk;
+ * :Wake all SBLOCKBUSY;
+ * :bh = bread(isbk->dev, BMAPBLOCK(bl) + isbk->dsblock.bbitmap);
+ * :bh->buf->mem[BMAPIDX(bl)] &= ~BMAPMASK(bl);
+ * :bh->dwrite = true;
+ * :bwrite(bh);
+ * :brelse(bh);
+ * stop
+ * @enduml
+ * 
+ * @param fs The filesystem number.
+ * @param bl The block number.
+ */void bfree(fsnum_t fs, block_t  bl)
 {
   ASSERT(fs < MAXFS);
   ASSERT(bl > 0);

@@ -41,7 +41,7 @@ add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/bin/bochs
   WORKING_DIRECTORY ${bochs_SOURCE_DIR}/bochs
   COMMAND ./configure ${bochs_CONFIGURE_PARAMS} > /dev/null
-  COMMAND make clean > /dev/null
+  COMMAND make all-clean > /dev/null
   COMMAND make > /dev/null
   COMMAND make install > /dev/null
   DEPENDS ${bochs_SOURCE_DIR}/bochs
