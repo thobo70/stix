@@ -28,38 +28,50 @@ start:
 
 main:
   mov $message, %si
-  mov $0xe, %ah
+  call print
+  # Set up the necessary parameters for the BIOS interrupt 0x13 to read sectors from disk
+  mov $0x1000, %bx    # Destination buffer address
+  mov $0x10, %ah      # Function number: Read sectors from disk
+  mov $0x9, %al       # Number of sectors to read
+  mov $0x2, %ch       # Cylinder number
+  mov $0x1, %cl       # Sector number
+  mov $0x0, %dh       # Head number
+  int $0x13           # Call BIOS interrupt 0x13 to read sectors from disk
+  jc disk_error
+  mov $start_message, %si
+  call print
+  jmp far 0x0:$0x1000
 
-print_msg:
+disk_error:
+  mov $error_message, %si
+  call print
+  jmp finish
+
+print:
+  push %ax
+  push %bx
+  push %cx
+  push %dx
+  push %si
+
+  mov $0x0E, %ah       # Function number: Print character
+print_loop:
   lodsb
+
   cmp $0, %al
-  je finish
+  je print_done
   int $0x10
-  jmp print_msg
+  jmp print_loop
+
+print_done:
+  pop %si
+  pop %dx
+  pop %cx
+  pop %bx
+  pop %ax
+  ret
 
 finish:
-  cli
-
-  # Send "Shutdown" to port 0x8900, exit bochs (see in bochs unmapped.cc[237])
-  mov $0x8900, %dx
-  movb $'S', %al
-  outb %al, %dx
-  movb $'h', %al
-  outb %al, %dx
-  movb $'u', %al
-  outb %al, %dx
-  movb $'t', %al
-  outb %al, %dx
-  movb $'d', %al
-  outb %al, %dx
-  movb $'o', %al
-  outb %al, %dx
-  movb $'w', %al
-  outb %al, %dx
-  movb $'n', %al
-  outb %al, %dx
-
-  # send shutdown https://wiki.osdev.org/Shutdown (but seems not to work for bochs)
   mov $0x2000, %dx
   mov $0xB004, %ax
   outw %ax, %dx        # for bochs and QEMU <2.0
@@ -68,11 +80,18 @@ finish:
   mov $0x4004, %ax
   mov $0x3400, %dx
   outw %ax, %dx        # for virtual box
+
   hlt
   jmp finish
 
 message:
-  .asciz "BootSec started ..."
+  .asciz "BootSec started ...\n"
+start_message:
+  .asciz "Start\n"
+sd_str:
+  .asciz "Shutdown"
+error_message:
+  .asciz "Disk read error!"
 
   # Magic number at the end of the boot sector
   .fill 510-(.-start), 1, 0
