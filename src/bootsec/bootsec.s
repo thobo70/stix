@@ -27,16 +27,21 @@ start:
   jmp main
 
 main:
+  mov %dl, bootdev         # Save boot device from DL register
+  cld
+
+  # Initialize stack: set SS:SP to 0x0000:0x7C00 (just below bootloader)
+  xor %ax, %ax
+  mov %ax, %ss
+  mov $0x7C00, %sp
+
+  call init_serial
+
   mov $message, %si
-  mov $0xe, %ah
+  call puts
 
-print_msg:
-  lodsb
-  cmp $0, %al
-  je finish
-  int $0x10
-  jmp print_msg
-
+  call serwait           # Wait for serial port to be ready
+  
 finish:
   cli
 
@@ -71,8 +76,90 @@ finish:
   hlt
   jmp finish
 
+# --- Subroutines at the end ---
+
+# putc: outputs character in AL to screen and COM1, no registers preserved
+putc:
+  mov %al, %cl           # Save char in CL for COM1 after BIOS call
+
+  # Print to screen (BIOS teletype)
+  mov $0xe, %ah
+  xor %bx, %bx
+  int $0x10
+
+  # Print to COM1
+  mov $0x3FD, %dx        # Line Status Register (base+5)
+.wait_transmit:
+  inb %dx, %al
+  test $0x20, %al
+  jz .wait_transmit
+
+  mov %cl, %al           # Restore char to AL
+  mov $0x3F8, %dx
+  outb %al, %dx
+
+  ret
+
+# puts: outputs zero-terminated string at SI using putc
+puts:
+  lodsb
+  cmp $0, %al
+  je .done
+  call putc
+  jmp puts
+.done:
+  ret
+
+serwait:
+  # Wait for the fifo of serial port to be empty
+  mov $0x3FD, %dx        # Line Status Register (base+5)
+.wait_fifo_empty:
+  inb %dx, %al
+  test $0x40, %al
+  jz .wait_fifo_empty
+  ret
+
+init_serial:
+  # Disable interrupts
+  mov $0x3F9, %dx
+  mov $0x00, %al
+  outb %al, %dx
+
+  # Set DLAB=1 to set baud rate divisor
+  mov $0x3FB, %dx
+  mov $0x80, %al
+  outb %al, %dx
+
+  # Set divisor to 12 (0x0C) for 9600 baud (1.8432 MHz / (16*12))
+  mov $0x3F8, %dx
+  mov $0x0C, %al
+  outb %al, %dx
+  mov $0x3F9, %dx
+  mov $0x00, %al
+  outb %al, %dx
+
+  # Set DLAB=0, 8 bits, no parity, one stop bit
+  mov $0x3FB, %dx
+  mov $0x03, %al
+  outb %al, %dx
+
+  # Enable FIFO, clear them, 14-byte threshold
+  mov $0x3FA, %dx
+  mov $0xC7, %al
+  outb %al, %dx
+
+  # Mark data terminal ready, signal request to send, enable auxiliary output 2
+  mov $0x3FC, %dx
+  mov $0x0B, %al
+  outb %al, %dx
+
+  ret
+
+bootdev:
+  .byte 0x00
+
 message:
-  .asciz "BootSec started ..."
+  .asciz "BootSec started ...\n"
 
   # Magic number at the end of the boot sector
   .fill 510-(.-start), 1, 0
