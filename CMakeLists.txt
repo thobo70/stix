@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.18)
 
+set(CMAKE_ASM_COMPILER as)
+enable_language(ASM)
+
 project(
   os
   VERSION 0.0.1
@@ -18,7 +21,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   bochs
   GIT_REPOSITORY https://github.com/bochs-emu/Bochs.git
-  GIT_TAG REL_2_7_FINAL
+  GIT_TAG REL_3_0_FINAL
 )
 
 set(CUNIT_DISABLE_TESTS ON CACHE BOOL "Disable CUnit tests" FORCE)
@@ -34,7 +37,7 @@ set(bochs_CONFIGURE_PARAMS
   --enable-cpu-level=3            # enable cpu level 3
   --with-nogui                    # disable gui
   #--with-x11                      # enable x11
-  #--with-term                     # enable terminal
+  --with-term                     # enable terminal
 )
 
 add_custom_command(
@@ -82,9 +85,11 @@ include(CTest)
 # BEGIN: Assemble and link bootsec.s with bootsec.ld to generate bootsec.bin
 add_custom_command(
   OUTPUT bootsec.bin
-  COMMAND ${CMAKE_ASM_COMPILER} -o bootsec.o -c "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.s"
+#  COMMAND ${CMAKE_ASM_COMPILER} -a -o bootsec.o -c "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.s"
+  COMMAND as -a -o bootsec.o -c "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.s" > ./bootsec.lst
   COMMAND ${CMAKE_LINKER} -o bootsec.bin --oformat binary bootsec.o -T "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.ld"
-  BYPRODUCTS bootsec.o
+  BYPRODUCTS bootsec.o bootsec.lst bootsec.bin
+  COMMENT "Assembling and linking bootsec.s to generate bootsec.bin"
   DEPENDS src/bootsec/bootsec.s src/bootsec/bootsec.ld
 )
 
@@ -136,10 +141,8 @@ set_property(TEST tests1 PROPERTY TIMEOUT "10")
 add_test(
   NAME bochs_test
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  COMMAND bin/bochs -q -f bochsrc.txt
+  COMMAND sh -c "bin/bochs -q -f bochsrc.txt ; exit 0"
 )
-# test with bochs would fail, because bochs doesn't support simple shutdown without an error
-# this is a workaround and will be removed when stix will boot and shutdown properly
 set_tests_properties(bochs_test PROPERTIES
   PASS_REGULAR_EXPRESSION "shutdown\ requested"
 )
