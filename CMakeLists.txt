@@ -88,6 +88,8 @@ add_custom_command(
 #  COMMAND ${CMAKE_ASM_COMPILER} -a -o bootsec.o -c "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.s"
   COMMAND as -a -o bootsec.o -c "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.s" > ./bootsec.lst
   COMMAND ${CMAKE_LINKER} -o bootsec.bin --oformat binary bootsec.o -T "${PROJECT_SOURCE_DIR}/src/bootsec/bootsec.ld"
+  COMMAND echo "2nd sector loaded at 0x7e00" >> bootsec.bin
+  COMMAND head -c 512 /dev/zero >> bootsec.bin
   BYPRODUCTS bootsec.o bootsec.lst bootsec.bin
   COMMENT "Assembling and linking bootsec.s to generate bootsec.bin"
   DEPENDS src/bootsec/bootsec.s src/bootsec/bootsec.ld
