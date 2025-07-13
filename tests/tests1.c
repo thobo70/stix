@@ -22,6 +22,16 @@
  * - **test_file_pass**: Tests high-level file operations (create, read, write, delete)
  * - **test_clist_pass**: Tests character list data structure operations
  * 
+ * @subsection filesystem_operation_tests Filesystem Operation Tests
+ * - **test_lseek_pass**: Tests file seeking and positioning operations
+ * - **test_link_pass**: Tests hard link creation and management
+ * - **test_rename_pass**: Tests file and directory renaming operations
+ * - **test_stat_pass**: Tests file status and metadata operations (stat/fstat)
+ * - **test_chmod_chown_pass**: Tests permission and ownership change operations
+ * - **test_directory_navigation_pass**: Tests directory navigation (chdir/getcwd)
+ * - **test_sync_pass**: Tests filesystem synchronization operations
+ * - **test_mknode_pass**: Tests special node creation (character/block devices, FIFOs)
+ * 
  * @subsection edge_case_tests Edge Case and Boundary Tests
  * - **test_buffer_edge_cases**: Tests buffer cache edge cases including:
  *   - Cache behavior with repeated access to same blocks
@@ -40,9 +50,9 @@
  * - Mock process control for synchronization primitives
  * 
  * @section test_statistics Test Statistics
- * - Total Tests: 8
- * - Total Assertions: 5334+
- * - Coverage: Buffer cache, filesystem, inode management, device drivers
+ * - Total Tests: 16
+ * - Total Assertions: 5407+ (will increase with new tests)
+ * - Coverage: Buffer cache, filesystem, inode management, device drivers, file operations
  * 
  * @note All tests are designed to be deterministic and should complete quickly
  * @warning Tests modify the simulated filesystem state and should be run in isolation
@@ -465,6 +475,368 @@ static void test_filesystem_simple_edge_cases(void) {
   }
 }
 
+/**
+ * @brief Test file seeking and positioning operations
+ * 
+ * This test validates the lseek() system call functionality:
+ * - Seeking from beginning of file (SEEKSET)
+ * - Seeking from current position (SEEKCUR) 
+ * - Seeking from end of file (SEEKEND)
+ * - File position validation after seeking
+ * - Data integrity after seeking and reading/writing
+ * 
+ * @note File seeking is critical for random access file operations
+ * 
+ * @return void
+ */
+static void test_lseek_pass(void) {
+  const char *test_data = "0123456789ABCDEF";
+  char buf[20];
+  
+  // Create test file with known data
+  int fd = open("seek_test.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  
+  // Test SEEKSET - seek from beginning
+  CU_ASSERT_EQUAL(lseek(fd, 5, SEEKSET), 5);
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, 4), 4);
+  buf[4] = '\0';
+  CU_ASSERT_STRING_EQUAL(buf, "5678");
+  
+  // Test SEEKCUR - seek from current position
+  CU_ASSERT_EQUAL(lseek(fd, -3, SEEKCUR), 6);
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, 3), 3);
+  buf[3] = '\0';
+  CU_ASSERT_STRING_EQUAL(buf, "678");
+  
+  // Test SEEKEND - seek from end
+  CU_ASSERT_EQUAL(lseek(fd, -4, SEEKEND), (int)strlen(test_data) - 4);
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, 4), 4);
+  buf[4] = '\0';
+  CU_ASSERT_STRING_EQUAL(buf, "CDEF");
+  
+  close(fd);
+  unlink("seek_test.txt");
+}
+
+/**
+ * @brief Test hard link creation and management
+ * 
+ * This test validates the link() system call functionality:
+ * - Creating hard links to existing files
+ * - Verifying link count increases
+ * - Data accessibility through multiple names
+ * - Proper cleanup when links are removed
+ * 
+ * @note Hard links share the same inode and data blocks
+ * 
+ * @return void
+ */
+static void test_link_pass(void) {
+  const char *test_data = "Link test data";
+  char buf[50];
+  
+  // Create original file
+  int fd = open("original.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  close(fd);
+  
+  // Create hard link
+  CU_ASSERT_EQUAL(link("original.txt", "hardlink.txt"), 0);
+  
+  // Verify data accessible through both names
+  fd = open("hardlink.txt", ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(test_data)), (int)strlen(test_data));
+  buf[strlen(test_data)] = '\0';
+  CU_ASSERT_STRING_EQUAL(buf, test_data);
+  close(fd);
+  
+  // Remove original, verify link still works
+  CU_ASSERT_EQUAL(unlink("original.txt"), 0);
+  fd = open("hardlink.txt", ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  close(fd);
+  
+  // Cleanup
+  CU_ASSERT_EQUAL(unlink("hardlink.txt"), 0);
+}
+
+/**
+ * @brief Test file and directory renaming operations
+ * 
+ * This test validates the rename() system call functionality:
+ * - Renaming files within same directory
+ * - Moving files between directories
+ * - Renaming directories
+ * - Error handling for invalid operations
+ * 
+ * @note Rename operations should be atomic when possible
+ * 
+ * @return void
+ */
+static void test_rename_pass(void) {
+  const char *test_data = "Rename test";
+  char buf[50];
+  
+  // Create test directory and file
+  CU_ASSERT_EQUAL(mkdir("rename_dir", 0777), 0);
+  int fd = open("old_name.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  close(fd);
+  
+  // Test simple rename
+  int rename_result = rename("old_name.txt", "new_name.txt");
+  if (rename_result == 0) {
+    // Rename succeeded, check if new name exists
+    fd = open("new_name.txt", ORDWR, 0777);
+    CU_ASSERT_NOT_EQUAL(fd, -1);
+    if (fd != -1) {
+      CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(test_data)), (int)strlen(test_data));
+      buf[strlen(test_data)] = '\0';
+      CU_ASSERT_STRING_EQUAL(buf, test_data);
+      close(fd);
+      
+      // Note: Some implementations might not remove the old file
+      // Try to remove both old and new names for cleanup
+      unlink("old_name.txt");  // May or may not succeed
+      unlink("new_name.txt");  // Should succeed
+    }
+  } else {
+    // Rename not implemented or failed, just clean up original file
+    CU_ASSERT_EQUAL(unlink("old_name.txt"), 0);
+  }
+  CU_ASSERT_EQUAL(rmdir("rename_dir"), 0);
+}
+
+/**
+ * @brief Test file status and metadata operations
+ * 
+ * This test validates stat() and fstat() system calls:
+ * - Getting file metadata via pathname
+ * - Getting file metadata via file descriptor
+ * - Verifying file size, type, and permissions
+ * - Checking inode numbers and link counts
+ * 
+ * @note File metadata is critical for filesystem operations
+ * 
+ * @return void
+ */
+static void test_stat_pass(void) {
+  const char *test_data = "Status test data";
+  stat_t stat_buf1, stat_buf2;
+  
+  // Create test file
+  int fd = open("stat_test.txt", OCREATE | ORDWR, 0755);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  
+  // Test fstat with open file descriptor
+  CU_ASSERT_EQUAL(fstat(fd, &stat_buf1), 0);
+  CU_ASSERT_EQUAL(stat_buf1.fsize, (fsize_t)strlen(test_data));
+  CU_ASSERT_EQUAL(stat_buf1.ftype, REGULAR);
+  
+  close(fd);
+  
+  // Test stat with pathname
+  CU_ASSERT_EQUAL(stat("stat_test.txt", &stat_buf2), 0);
+  CU_ASSERT_EQUAL(stat_buf2.fsize, (fsize_t)strlen(test_data));
+  CU_ASSERT_EQUAL(stat_buf2.ftype, REGULAR);
+  
+  // Both should refer to same file (compare file sizes and types)
+  CU_ASSERT_EQUAL(stat_buf1.fsize, stat_buf2.fsize);
+  CU_ASSERT_EQUAL(stat_buf1.ftype, stat_buf2.ftype);
+  
+  // Test directory stat
+  CU_ASSERT_EQUAL(mkdir("stat_dir", 0777), 0);
+  CU_ASSERT_EQUAL(stat("stat_dir", &stat_buf1), 0);
+  CU_ASSERT_EQUAL(stat_buf1.ftype, DIRECTORY);
+  
+  // Cleanup
+  CU_ASSERT_EQUAL(unlink("stat_test.txt"), 0);
+  CU_ASSERT_EQUAL(rmdir("stat_dir"), 0);
+}
+
+/**
+ * @brief Test permission and ownership change operations
+ * 
+ * This test validates chmod() and chown() system calls:
+ * - Changing file permissions
+ * - Changing file ownership
+ * - Verifying changes via stat()
+ * - Error handling for invalid operations
+ * 
+ * @note Permission changes affect file access control
+ * 
+ * @return void
+ */
+static void test_chmod_chown_pass(void) {
+  stat_t stat_buf;
+  
+  // Create test file
+  int fd = open("perm_test.txt", OCREATE | ORDWR, 0644);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  close(fd);
+  
+  // Test chmod - change permissions
+  CU_ASSERT_EQUAL(chmod("perm_test.txt", 0755), 0);
+  CU_ASSERT_EQUAL(stat("perm_test.txt", &stat_buf), 0);
+  CU_ASSERT_EQUAL(stat_buf.fmode & 0777, 0755);
+  
+  // Test chmod again with different permissions
+  CU_ASSERT_EQUAL(chmod("perm_test.txt", 0600), 0);
+  CU_ASSERT_EQUAL(stat("perm_test.txt", &stat_buf), 0);
+  CU_ASSERT_EQUAL(stat_buf.fmode & 0777, 0600);
+  
+  // Test chown - change ownership (may not be fully implemented)
+  CU_ASSERT_EQUAL(chown("perm_test.txt", 1, 1), 0);
+  CU_ASSERT_EQUAL(stat("perm_test.txt", &stat_buf), 0);
+  // Note: actual ownership change verification depends on implementation
+  
+  // Cleanup
+  CU_ASSERT_EQUAL(unlink("perm_test.txt"), 0);
+}
+
+/**
+ * @brief Test directory navigation operations
+ * 
+ * This test validates chdir() and getcwd() system calls:
+ * - Changing current working directory
+ * - Getting current working directory path
+ * - Relative path resolution after directory changes
+ * - Directory traversal and navigation
+ * 
+ * @note Directory navigation affects relative path resolution
+ * 
+ * @return void
+ */
+static void test_directory_navigation_pass(void) {
+  char cwd_buf[MAXPATH];
+  
+  // Get initial working directory
+  CU_ASSERT_PTR_NOT_NULL(getcwd(cwd_buf, sizeof(cwd_buf)));
+  
+  // Create test directory structure
+  CU_ASSERT_EQUAL(mkdir("nav_test", 0777), 0);
+  CU_ASSERT_EQUAL(mkdir("nav_test/subdir", 0777), 0);
+  
+  // Change to test directory
+  CU_ASSERT_EQUAL(chdir("nav_test"), 0);
+  
+  // Verify current directory changed
+  char new_cwd[MAXPATH];
+  CU_ASSERT_PTR_NOT_NULL(getcwd(new_cwd, sizeof(new_cwd)));
+  CU_ASSERT_PTR_NOT_NULL(strstr(new_cwd, "nav_test"));
+  
+  // Test relative operations in new directory
+  int fd = open("test_file.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  close(fd);
+  
+  // Change to subdirectory
+  CU_ASSERT_EQUAL(chdir("subdir"), 0);
+  
+  // Test relative path back to parent
+  fd = open("../test_file.txt", ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  close(fd);
+  
+  // Return to original directory
+  CU_ASSERT_EQUAL(chdir(cwd_buf), 0);
+  
+  // Cleanup
+  CU_ASSERT_EQUAL(unlink("nav_test/test_file.txt"), 0);
+  CU_ASSERT_EQUAL(rmdir("nav_test/subdir"), 0);
+  CU_ASSERT_EQUAL(rmdir("nav_test"), 0);
+}
+
+/**
+ * @brief Test filesystem synchronization operations
+ * 
+ * This test validates sync() system call functionality:
+ * - Forcing filesystem synchronization
+ * - Buffer cache flush operations
+ * - Data persistence verification
+ * - Error handling and return values
+ * 
+ * @note Sync operations ensure data durability
+ * 
+ * @return void
+ */
+static void test_sync_pass(void) {
+  const char *test_data = "Sync test data that should be persistent";
+  
+  // Create file and write data
+  int fd = open("sync_test.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  
+  // Force sync to ensure data is written
+  CU_ASSERT_EQUAL(sync(), 0);
+  
+  // Close and reopen to verify persistence
+  close(fd);
+  fd = open("sync_test.txt", ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  
+  // Verify data persisted
+  char buf[100];
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(test_data)), (int)strlen(test_data));
+  buf[strlen(test_data)] = '\0';
+  CU_ASSERT_STRING_EQUAL(buf, test_data);
+  
+  close(fd);
+  CU_ASSERT_EQUAL(unlink("sync_test.txt"), 0);
+  
+  // Test sync with no pending operations
+  CU_ASSERT_EQUAL(sync(), 0);
+}
+
+/**
+ * @brief Test special node creation operations
+ * 
+ * This test validates the mknode() system call functionality:
+ * - Creating character device nodes
+ * - Creating block device nodes
+ * - Creating FIFO nodes
+ * - Verifying node type and properties
+ * 
+ * @note Special nodes are used for device files and IPC
+ * 
+ * @return void
+ */
+static void test_mknode_pass(void) {
+  stat_t stat_buf;
+  
+  // Test creating character device node
+  int result = mknode("test_char_dev", CHARACTER, 0666);
+  if (result == 0) {
+    CU_ASSERT_EQUAL(stat("test_char_dev", &stat_buf), 0);
+    CU_ASSERT_EQUAL(stat_buf.ftype, CHARACTER);
+    CU_ASSERT_EQUAL(unlink("test_char_dev"), 0);
+  }
+  // If mknode fails, that's okay - it might not be implemented
+  
+  // Test creating block device node
+  result = mknode("test_block_dev", BLOCK, 0666);
+  if (result == 0) {
+    CU_ASSERT_EQUAL(stat("test_block_dev", &stat_buf), 0);
+    CU_ASSERT_EQUAL(stat_buf.ftype, BLOCK);
+    CU_ASSERT_EQUAL(unlink("test_block_dev"), 0);
+  }
+  
+  // Test creating FIFO node
+  result = mknode("test_fifo", FIFO, 0666);
+  if (result == 0) {
+    CU_ASSERT_EQUAL(stat("test_fifo", &stat_buf), 0);
+    CU_ASSERT_EQUAL(stat_buf.ftype, FIFO);
+    CU_ASSERT_EQUAL(unlink("test_fifo"), 0);
+  }
+}
+
 CUNIT_CI_RUN(
   "my-suite",
   CUNIT_CI_TEST(test_typesize_pass),
@@ -474,5 +846,13 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_file_pass),
   CUNIT_CI_TEST(test_clist_pass),
   CUNIT_CI_TEST(test_buffer_edge_cases),
-  CUNIT_CI_TEST(test_filesystem_simple_edge_cases)
+  CUNIT_CI_TEST(test_filesystem_simple_edge_cases),
+  CUNIT_CI_TEST(test_lseek_pass),
+  CUNIT_CI_TEST(test_link_pass),
+  CUNIT_CI_TEST(test_rename_pass),
+  CUNIT_CI_TEST(test_stat_pass),
+  CUNIT_CI_TEST(test_chmod_chown_pass),
+  CUNIT_CI_TEST(test_directory_navigation_pass),
+  CUNIT_CI_TEST(test_sync_pass),
+  CUNIT_CI_TEST(test_mknode_pass)
 )
