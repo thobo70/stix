@@ -533,7 +533,9 @@ int close(int fdesc)
     /// @todo error invalid file descriptor
     return -1;
   }
-  putftabent(fdesc);
+  // Calculate file table index from pointer
+  int ftab_index = active->u->fdesc[fdesc].ftabent - filetab;
+  putftabent(ftab_index);
   active->u->fdesc[fdesc].ftabent = NULL;
   return 0;
 }
