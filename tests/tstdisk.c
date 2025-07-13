@@ -108,6 +108,11 @@ void testdiskread(byte_t *buf, ldevminor_t minor, block_t bidx)
 void tstdisk_open(ldevminor_t minor)
 {
   ASSERT(minor < 1);
+  // Free existing allocation to prevent memory leak
+  if (part[minor]) {
+    free(part[minor]);
+    part[minor] = NULL;
+  }
   part[minor] = malloc(sizeof(simpart_t));
   ASSERT(part[minor]);
 
@@ -138,8 +143,10 @@ void tstdisk_open(ldevminor_t minor)
 void tstdisk_close(ldevminor_t minor)
 {
   ASSERT(minor < 1);
-  if (part[minor])
+  if (part[minor]) {
     free(part[minor]);
+    part[minor] = NULL;  // Prevent double-free
+  }
 }
 
 void tstdisk_strategy(ldevminor_t minor, bhead_t *bh)
