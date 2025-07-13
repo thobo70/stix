@@ -111,7 +111,10 @@ add_executable(
 target_include_directories(
   mockup
   PUBLIC src/include
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+# Note: Console driver demonstration removed - requires kernel/hardware access
 
 # Modular test suite configuration
 set(TEST_COMMON_SRC
