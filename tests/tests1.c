@@ -31,6 +31,7 @@
  * - **test_directory_navigation_pass**: Tests directory navigation (chdir/getcwd)
  * - **test_sync_pass**: Tests filesystem synchronization operations
  * - **test_mknode_pass**: Tests special node creation (character/block devices, FIFOs)
+ * - **test_directory_operations_pass**: Tests directory reading (opendir/readdir/closedir)
  * 
  * @subsection edge_case_tests Edge Case and Boundary Tests
  * - **test_buffer_edge_cases**: Tests buffer cache edge cases including:
@@ -50,9 +51,9 @@
  * - Mock process control for synchronization primitives
  * 
  * @section test_statistics Test Statistics
- * - Total Tests: 16
- * - Total Assertions: 5407+ (will increase with new tests)
- * - Coverage: Buffer cache, filesystem, inode management, device drivers, file operations
+ * - Total Tests: 17
+ * - Total Assertions: 5416+ (will increase with new tests)
+ * - Coverage: Buffer cache, filesystem, inode management, device drivers, file operations, directory operations
  * 
  * @note All tests are designed to be deterministic and should complete quickly
  * @warning Tests modify the simulated filesystem state and should be run in isolation
@@ -837,6 +838,113 @@ static void test_mknode_pass(void) {
   }
 }
 
+/**
+ * @brief Test directory reading operations (opendir/readdir/closedir)
+ * 
+ * This test validates directory enumeration functionality:
+ * - Opening directories for reading
+ * - Reading directory entries sequentially
+ * - Proper handling of end-of-directory
+ * - Closing directory descriptors
+ * - Error handling for invalid operations
+ * 
+ * @note Directory reading is essential for file system navigation
+ * 
+ * @return void
+ */
+static void test_directory_operations_pass(void) {
+  // Create test directory structure
+  CU_ASSERT_EQUAL(mkdir("dir_test", 0777), 0);
+  CU_ASSERT_EQUAL(mkdir("dir_test/subdir1", 0777), 0);
+  CU_ASSERT_EQUAL(mkdir("dir_test/subdir2", 0777), 0);
+  
+  // Create some test files
+  int fd = open("dir_test/file1.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  close(fd);
+  
+  fd = open("dir_test/file2.txt", OCREATE | ORDWR, 0777);
+  CU_ASSERT_NOT_EQUAL(fd, -1);
+  close(fd);
+  
+  // Test opening directory
+  int dir_fd = opendir("dir_test");
+  CU_ASSERT_NOT_EQUAL(dir_fd, -1);
+  
+  if (dir_fd != -1) {
+    dirent_t entry;
+    int entry_count = 0;
+    int found_dot = 0, found_dotdot = 0;
+    int found_file1 = 0, found_file2 = 0;
+    int found_subdir1 = 0, found_subdir2 = 0;
+    
+    // Read all directory entries
+    int result;
+    while ((result = readdir(dir_fd, &entry)) > 0) {
+      entry_count++;
+      
+      // Check for standard entries
+      if (strcmp(entry.name, ".") == 0) {
+        found_dot = 1;
+      } else if (strcmp(entry.name, "..") == 0) {
+        found_dotdot = 1;
+      } else if (strcmp(entry.name, "file1.txt") == 0) {
+        found_file1 = 1;
+      } else if (strcmp(entry.name, "file2.txt") == 0) {
+        found_file2 = 1;
+      } else if (strcmp(entry.name, "subdir1") == 0) {
+        found_subdir1 = 1;
+      } else if (strcmp(entry.name, "subdir2") == 0) {
+        found_subdir2 = 1;
+      }
+    }
+    
+    // Should have read successfully until end of directory
+    CU_ASSERT_EQUAL(result, 0);  // End of directory
+    
+    // Should have found . and .. entries
+    CU_ASSERT_EQUAL(found_dot, 1);
+    CU_ASSERT_EQUAL(found_dotdot, 1);
+    
+    // Should have found our created files and directories
+    CU_ASSERT_EQUAL(found_file1, 1);
+    CU_ASSERT_EQUAL(found_file2, 1);
+    CU_ASSERT_EQUAL(found_subdir1, 1);
+    CU_ASSERT_EQUAL(found_subdir2, 1);
+    
+    // Total entries should be at least 6 (., .., file1.txt, file2.txt, subdir1, subdir2)
+    CU_ASSERT(entry_count >= 6);
+    
+    // Test closing directory
+    CU_ASSERT_EQUAL(closedir(dir_fd), 0);
+  }
+  
+  // Test error cases
+  CU_ASSERT_EQUAL(opendir("nonexistent_dir"), -1);  // Directory doesn't exist
+  CU_ASSERT_EQUAL(opendir("dir_test/file1.txt"), -1);  // Not a directory
+  CU_ASSERT_EQUAL(closedir(-1), -1);  // Invalid file descriptor
+  
+  // Test readdir with invalid file descriptor
+  dirent_t dummy;
+  CU_ASSERT_EQUAL(readdir(-1, &dummy), -1);
+  
+  // Test opening root directory
+  int root_fd = opendir("/");
+  if (root_fd != -1) {
+    dirent_t root_entry;
+    int root_result = readdir(root_fd, &root_entry);
+    CU_ASSERT(root_result >= 0);  // Should be able to read root directory
+    closedir(root_fd);
+  }
+  
+  // Cleanup
+  CU_ASSERT_EQUAL(unlink("dir_test/file1.txt"), 0);
+  CU_ASSERT_EQUAL(unlink("dir_test/file2.txt"), 0);
+  CU_ASSERT_EQUAL(rmdir("dir_test/subdir1"), 0);
+  CU_ASSERT_EQUAL(rmdir("dir_test/subdir2"), 0);
+  CU_ASSERT_EQUAL(rmdir("dir_test"), 0);
+}
+
 CUNIT_CI_RUN(
   "my-suite",
   CUNIT_CI_TEST(test_typesize_pass),
@@ -854,5 +962,6 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_chmod_chown_pass),
   CUNIT_CI_TEST(test_directory_navigation_pass),
   CUNIT_CI_TEST(test_sync_pass),
-  CUNIT_CI_TEST(test_mknode_pass)
+  CUNIT_CI_TEST(test_mknode_pass),
+  CUNIT_CI_TEST(test_directory_operations_pass)
 )
