@@ -10,6 +10,12 @@
  * This file contains a comprehensive test suite for the STIX operating system components
  * including buffer management, filesystem operations, inode handling, and device drivers.
  * 
+ * @note Uses STIX-native string functions instead of standard C library:
+ *       - snlen() instead of strlen()
+ *       - sncmp() instead of strcmp()  
+ *       - sncpy() instead of strcpy()
+ *       This ensures kernel-level code compatibility and safety.
+ * 
  * @section test_overview Test Overview
  * 
  * The test suite includes the following test categories:
@@ -72,8 +78,6 @@
 #include "dd.h"
 #include "clist.h"
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 extern process_t *active;
 
@@ -180,7 +184,7 @@ static void test_buffer_pass(void) {
   CU_ASSERT_PTR_NOT_NULL_FATAL(b);
   CU_ASSERT_EQUAL(b->block, 60000);
   CU_ASSERT_TRUE(b->error);
-  strcpy((char *)b->buf->mem, str);
+  sncpy((char *)b->buf->mem, str, BLOCKSIZE);
   brelse(b);
 
   // read from cache
@@ -188,16 +192,16 @@ static void test_buffer_pass(void) {
   // but should be overwritten by new buffer
   b = bread(dev, 0);
   CU_ASSERT_PTR_NOT_NULL_FATAL(b);
-  CU_ASSERT_NOT_EQUAL(strcmp((char *)b->buf->mem, str), 0);
+  CU_ASSERT_NOT_EQUAL(sncmp((char *)b->buf->mem, str, BLOCKSIZE), 0);
   brelse(b);
 
   b = bread(dev, 0);
   CU_ASSERT_PTR_NOT_NULL_FATAL(b);
-  strcpy((char *)b->buf->mem, str);
+  sncpy((char *)b->buf->mem, str, BLOCKSIZE);
   b->dwrite = false;    // write to disk immediately
   bwrite(b);
   brelse(b);
-  CU_ASSERT_EQUAL(strcmp(tstdisk_getblock(0, 0), str), 0);
+  CU_ASSERT_EQUAL(sncmp(tstdisk_getblock(0, 0), str, BLOCKSIZE), 0);
 }
 
 /**
@@ -309,13 +313,14 @@ static void test_file_pass(void) {
   char buf[100];
   int fd = open("/test/test.txt", OCREATE | ORDWR, 0777);
   CU_ASSERT_EQUAL(fd, 0);
-  CU_ASSERT_EQUAL(write(fd, (byte_t *)str, strlen(str) + 1), (int)strlen(str) + 1);
+  fsize_t str_len = snlen(str, 100);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)str, str_len + 1), (int)str_len + 1);
   CU_ASSERT_EQUAL(close(fd), 0);
 
   fd = open("/test/test.txt", ORDWR, 0777);
   CU_ASSERT_EQUAL(fd, 0);
-  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(str) + 1), (int)strlen(str) + 1);
-  CU_ASSERT_EQUAL(strcmp(buf, str), 0);
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, str_len + 1), (int)str_len + 1);
+  CU_ASSERT_EQUAL(sncmp(buf, str, 100), 0);
   CU_ASSERT_EQUAL(close(fd), 0);
 
   CU_ASSERT_EQUAL(open("/test", ORDWR, 0777), -1);
@@ -328,7 +333,7 @@ static void test_file_pass(void) {
   int n;
   CU_ASSERT_EQUAL(fd = open("full.txt", OCREATE | ORDWR, 0777), 0);
   do {
-    CU_ASSERT_EQUAL((n = write(fd, (byte_t *)str, strlen(str) + 1)) >= 0, (1 == 1));
+    CU_ASSERT_EQUAL((n = write(fd, (byte_t *)str, str_len + 1)) >= 0, (1 == 1));
   } while (n != 0);
   CU_ASSERT_EQUAL(close(fd), 0);
   CU_ASSERT_EQUAL(unlink("full.txt"), 0);
@@ -416,7 +421,7 @@ static void test_buffer_edge_cases(void) {
   const char *test_data = "EdgeCaseTest";
   bhead_t *bwr = bread(dev, 2);
   CU_ASSERT_PTR_NOT_NULL_FATAL(bwr);
-  strcpy((char *)bwr->buf->mem, test_data);
+  sncpy((char *)bwr->buf->mem, test_data, BLOCKSIZE);
   bwr->dwrite = false;  // Write immediately
   bwrite(bwr);
   brelse(bwr);
@@ -424,7 +429,7 @@ static void test_buffer_edge_cases(void) {
   // Verify data persists
   bhead_t *bread_back = bread(dev, 2);
   CU_ASSERT_PTR_NOT_NULL_FATAL(bread_back);
-  CU_ASSERT_EQUAL(strcmp((char *)bread_back->buf->mem, test_data), 0);
+  CU_ASSERT_EQUAL(sncmp((char *)bread_back->buf->mem, test_data, BLOCKSIZE), 0);
   brelse(bread_back);
 }
 
@@ -497,7 +502,8 @@ static void test_lseek_pass(void) {
   // Create test file with known data
   int fd = open("seek_test.txt", OCREATE | ORDWR, 0777);
   CU_ASSERT_NOT_EQUAL(fd, -1);
-  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  fsize_t test_data_len = snlen(test_data, 100);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, test_data_len), (int)test_data_len);
   
   // Test SEEKSET - seek from beginning
   CU_ASSERT_EQUAL(lseek(fd, 5, SEEKSET), 5);
@@ -512,7 +518,7 @@ static void test_lseek_pass(void) {
   CU_ASSERT_STRING_EQUAL(buf, "678");
   
   // Test SEEKEND - seek from end
-  CU_ASSERT_EQUAL(lseek(fd, -4, SEEKEND), (int)strlen(test_data) - 4);
+  CU_ASSERT_EQUAL(lseek(fd, -4, SEEKEND), (int)test_data_len - 4);
   CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, 4), 4);
   buf[4] = '\0';
   CU_ASSERT_STRING_EQUAL(buf, "CDEF");
@@ -541,7 +547,8 @@ static void test_link_pass(void) {
   // Create original file
   int fd = open("original.txt", OCREATE | ORDWR, 0777);
   CU_ASSERT_NOT_EQUAL(fd, -1);
-  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  fsize_t test_data_len = snlen(test_data, 100);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, test_data_len), (int)test_data_len);
   close(fd);
   
   // Create hard link
@@ -550,8 +557,8 @@ static void test_link_pass(void) {
   // Verify data accessible through both names
   fd = open("hardlink.txt", ORDWR, 0777);
   CU_ASSERT_NOT_EQUAL(fd, -1);
-  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(test_data)), (int)strlen(test_data));
-  buf[strlen(test_data)] = '\0';
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, test_data_len), (int)test_data_len);
+  buf[test_data_len] = '\0';
   CU_ASSERT_STRING_EQUAL(buf, test_data);
   close(fd);
   
@@ -586,7 +593,8 @@ static void test_rename_pass(void) {
   CU_ASSERT_EQUAL(mkdir("rename_dir", 0777), 0);
   int fd = open("old_name.txt", OCREATE | ORDWR, 0777);
   CU_ASSERT_NOT_EQUAL(fd, -1);
-  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  fsize_t test_data_len = snlen(test_data, 100);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, test_data_len), (int)test_data_len);
   close(fd);
   
   // Test simple rename
@@ -596,8 +604,8 @@ static void test_rename_pass(void) {
     fd = open("new_name.txt", ORDWR, 0777);
     CU_ASSERT_NOT_EQUAL(fd, -1);
     if (fd != -1) {
-      CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(test_data)), (int)strlen(test_data));
-      buf[strlen(test_data)] = '\0';
+      CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, test_data_len), (int)test_data_len);
+      buf[test_data_len] = '\0';
       CU_ASSERT_STRING_EQUAL(buf, test_data);
       close(fd);
       
@@ -633,18 +641,19 @@ static void test_stat_pass(void) {
   // Create test file
   int fd = open("stat_test.txt", OCREATE | ORDWR, 0755);
   CU_ASSERT_NOT_EQUAL(fd, -1);
-  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  fsize_t test_data_len = snlen(test_data, 100);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, test_data_len), (int)test_data_len);
   
   // Test fstat with open file descriptor
   CU_ASSERT_EQUAL(fstat(fd, &stat_buf1), 0);
-  CU_ASSERT_EQUAL(stat_buf1.fsize, (fsize_t)strlen(test_data));
+  CU_ASSERT_EQUAL(stat_buf1.fsize, test_data_len);
   CU_ASSERT_EQUAL(stat_buf1.ftype, REGULAR);
   
   close(fd);
   
   // Test stat with pathname
   CU_ASSERT_EQUAL(stat("stat_test.txt", &stat_buf2), 0);
-  CU_ASSERT_EQUAL(stat_buf2.fsize, (fsize_t)strlen(test_data));
+  CU_ASSERT_EQUAL(stat_buf2.fsize, test_data_len);
   CU_ASSERT_EQUAL(stat_buf2.ftype, REGULAR);
   
   // Both should refer to same file (compare file sizes and types)
@@ -773,7 +782,8 @@ static void test_sync_pass(void) {
   // Create file and write data
   int fd = open("sync_test.txt", OCREATE | ORDWR, 0777);
   CU_ASSERT_NOT_EQUAL(fd, -1);
-  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, strlen(test_data)), (int)strlen(test_data));
+  fsize_t test_data_len = snlen(test_data, 100);
+  CU_ASSERT_EQUAL(write(fd, (byte_t *)test_data, test_data_len), (int)test_data_len);
   
   // Force sync to ensure data is written
   CU_ASSERT_EQUAL(sync(), 0);
@@ -785,8 +795,8 @@ static void test_sync_pass(void) {
   
   // Verify data persisted
   char buf[100];
-  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, strlen(test_data)), (int)strlen(test_data));
-  buf[strlen(test_data)] = '\0';
+  CU_ASSERT_EQUAL(read(fd, (byte_t *)buf, test_data_len), (int)test_data_len);
+  buf[test_data_len] = '\0';
   CU_ASSERT_STRING_EQUAL(buf, test_data);
   
   close(fd);
@@ -884,17 +894,17 @@ static void test_directory_operations_pass(void) {
       entry_count++;
       
       // Check for standard entries
-      if (strcmp(entry.name, ".") == 0) {
+      if (sncmp(entry.name, ".", DIRNAMEENTRY) == 0) {
         found_dot = 1;
-      } else if (strcmp(entry.name, "..") == 0) {
+      } else if (sncmp(entry.name, "..", DIRNAMEENTRY) == 0) {
         found_dotdot = 1;
-      } else if (strcmp(entry.name, "file1.txt") == 0) {
+      } else if (sncmp(entry.name, "file1.txt", DIRNAMEENTRY) == 0) {
         found_file1 = 1;
-      } else if (strcmp(entry.name, "file2.txt") == 0) {
+      } else if (sncmp(entry.name, "file2.txt", DIRNAMEENTRY) == 0) {
         found_file2 = 1;
-      } else if (strcmp(entry.name, "subdir1") == 0) {
+      } else if (sncmp(entry.name, "subdir1", DIRNAMEENTRY) == 0) {
         found_subdir1 = 1;
-      } else if (strcmp(entry.name, "subdir2") == 0) {
+      } else if (sncmp(entry.name, "subdir2", DIRNAMEENTRY) == 0) {
         found_subdir2 = 1;
       }
     }

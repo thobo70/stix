@@ -18,7 +18,6 @@
 #include "dd.h"
 #include "pc.h"
 #include <stdlib.h>
-#include <string.h>
 
 #define SIMNINODES  (NINODESBLOCK * 2)
 #define SIMINODEBLOCKS (SIMNINODES / NINODESBLOCK)
@@ -75,7 +74,7 @@ void testdiskwrite(byte_t *buf, ldevminor_t minor, block_t bidx)
   ASSERT(minor < SIMNMINOR);
   ASSERT(bidx < SIMNBLOCKS);
   ASSERT(part[minor]);
-  memcpy(part[minor]->block[bidx].mem, buf, BLOCKSIZE);
+  mcpy(part[minor]->block[bidx].mem, buf, BLOCKSIZE);
 }
 
 void testdiskread(byte_t *buf, ldevminor_t minor, block_t bidx)
@@ -83,7 +82,7 @@ void testdiskread(byte_t *buf, ldevminor_t minor, block_t bidx)
   ASSERT(minor < SIMNMINOR);
   ASSERT(bidx < SIMNBLOCKS);
   ASSERT(part[minor]);
-  memcpy(buf, part[minor]->block[bidx].mem, BLOCKSIZE);
+  mcpy(buf, part[minor]->block[bidx].mem, BLOCKSIZE);
 }
 
 
@@ -116,7 +115,7 @@ void tstdisk_open(ldevminor_t minor)
   part[minor] = malloc(sizeof(simpart_t));
   ASSERT(part[minor]);
 
-  memset(part[minor], 0, sizeof(simpart_t));
+  mset(part[minor], 0, sizeof(simpart_t));
   part[minor]->fs.sblock.super.version = 1;
   part[minor]->fs.sblock.super.type = 0;
   part[minor]->fs.sblock.super.inodes = 2; // start block of inodes
@@ -132,9 +131,9 @@ void tstdisk_open(ldevminor_t minor)
 
   dirent_t *rootdir = (dirent_t*) part[minor]->block[part[minor]->fs.inodes.i[0].blockrefs[0]].mem;
   rootdir[0].inum = 1; // first inode starts with 1 not 0
-  strncpy(rootdir[0].name, ".", DIRNAMEENTRY);
+  sncpy(rootdir[0].name, ".", DIRNAMEENTRY);
   rootdir[1].inum = 1; // first inode starts with 1 not 0
-  strncpy(rootdir[1].name, "..", DIRNAMEENTRY);
+  sncpy(rootdir[1].name, "..", DIRNAMEENTRY);
 
   byte_t *bmap = part[minor]->block[part[minor]->fs.sblock.super.bbitmap].mem;
   bmap[0] = 0x3F;  // first 6 bits of bitmap are set, 6 blocks are used
