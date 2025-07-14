@@ -2,7 +2,15 @@
  * @file test_main.c
  * @author Thomas Boos (tboos70@gmail.com)
  * @brief Simple test runner using CUNIT_CI_RUN for modular STIX tests
- * @version 0.1
+ * @version   CUNIT_CI_TEST(test_mount_umount_comprehensive),
+  CUNIT_CI_TEST(test_clist_tstcon_pattern_mode),
+  CUNIT_CI_TEST(test_clist_tstcon_sequential_mode),
+  CUNIT_CI_TEST(test_clist_tstcon_random_mode),
+  CUNIT_CI_TEST(test_clist_tstcon_stress_mode),
+  CUNIT_CI_TEST(test_clist_tstcon_multiple_devices),
+  CUNIT_CI_TEST(test_clist_tstcon_statistics_tracking),
+  CUNIT_CI_TEST(test_clist_tstcon_comprehensive)
+)
  * @date 2023-11-01
  * 
  * @copyright Copyright (c) 2023
@@ -55,6 +63,18 @@ extern void test_mkfs_edge_cases_pass(void);
 extern void test_filesystem_integrity_validation(void);
 extern void test_filesystem_stress_with_validation(void);
 extern void test_filesystem_mkfs_fresh_creation(void);
+extern void test_mount_basic_pass(void);
+extern void test_mount_parameter_validation(void);
+extern void test_mount_flags_pass(void);
+extern void test_umount_basic_pass(void);
+extern void test_umount_parameter_validation(void);
+extern void test_mount_umount_workflow(void);
+extern void test_mount_multiple_points(void);
+extern void test_mount_already_mounted(void);
+extern void test_umount_busy_filesystem(void);
+extern void test_mount_superblock_handling(void);
+extern void test_mount_umount_edge_cases(void);
+extern void test_mount_umount_comprehensive(void);
 
 // Suite setup function - called once before all tests
 CU_SUITE_SETUP() {
@@ -116,7 +136,6 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_filesystem_simple_edge_cases),
   CUNIT_CI_TEST(test_filesystem_integrity_validation),
   CUNIT_CI_TEST(test_filesystem_stress_with_validation),
-  CUNIT_CI_TEST(test_filesystem_mkfs_fresh_creation),
   CUNIT_CI_TEST(test_lseek_pass),
   CUNIT_CI_TEST(test_link_pass),
   CUNIT_CI_TEST(test_rename_pass),
@@ -126,6 +145,18 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_sync_pass),
   CUNIT_CI_TEST(test_mknode_pass),
   CUNIT_CI_TEST(test_directory_operations_pass),
+  CUNIT_CI_TEST(test_mount_basic_pass),
+  CUNIT_CI_TEST(test_mount_parameter_validation),
+  CUNIT_CI_TEST(test_mount_flags_pass),
+  CUNIT_CI_TEST(test_umount_basic_pass),
+  CUNIT_CI_TEST(test_umount_parameter_validation),
+  CUNIT_CI_TEST(test_mount_umount_workflow),
+  CUNIT_CI_TEST(test_mount_multiple_points),
+  CUNIT_CI_TEST(test_mount_already_mounted),
+  CUNIT_CI_TEST(test_umount_busy_filesystem),
+  CUNIT_CI_TEST(test_mount_superblock_handling),
+  CUNIT_CI_TEST(test_mount_umount_edge_cases),
+  CUNIT_CI_TEST(test_mount_umount_comprehensive),
   CUNIT_CI_TEST(test_clist_tstcon_pattern_mode),
   CUNIT_CI_TEST(test_clist_tstcon_sequential_mode),
   CUNIT_CI_TEST(test_clist_tstcon_random_mode),

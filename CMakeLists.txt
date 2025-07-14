@@ -135,6 +135,7 @@ set(TEST_UNIT_SRC
   tests/unit/test_clist_tstcon.c
   tests/unit/test_fsck.c
   tests/unit/test_mkfs.c
+  tests/unit/test_mount.c
 )
 
 # Build modular test executable
