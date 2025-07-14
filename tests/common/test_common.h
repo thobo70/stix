@@ -44,18 +44,14 @@
 #define TEST_BUFFER_SIZE 1024       ///< Standard test buffer size
 #define TEST_ITERATIONS_DEFAULT 10  ///< Default number of test iterations
 
+// Test disk simulation constants (from tstdisk.c)
+#define TEST_SIMNBLOCKS 128         ///< Number of blocks in simulated disk
+
 // External references
 extern process_t *active;
 extern bdev_t tstdisk;
 extern cdev_t tstcon;
 extern fsnum_t fs1;
-
-// Device tables
-extern bdev_t *bdevtable[];
-extern cdev_t *cdevtable[];
-
-// Test helper functions
-char *tstdisk_getblock(ldevminor_t minor, block_t bidx);
 
 /**
  * @brief Common test setup function
@@ -163,5 +159,11 @@ typedef struct test_perf_t {
 void test_perf_start(test_perf_t *perf, const char *test_name);
 void test_perf_end(test_perf_t *perf, dword_t operations);
 void test_perf_report(const test_perf_t *perf);
+
+// Function prototypes for tstdisk enhancements
+extern int tstdisk_fsck_validate(ldevminor_t minor);
+extern int tstdisk_mkfs_init(ldevminor_t minor);
+extern int tstdisk_create_fresh_fs(ldevminor_t minor, word_t sectors, word_t inodes);
+extern char *tstdisk_getblock(ldevminor_t minor, block_t bidx);
 
 #endif /* TEST_COMMON_H */

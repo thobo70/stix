@@ -52,6 +52,9 @@ extern void test_mkfs_bitmap_pass(void);
 extern void test_mkfs_root_directory_pass(void);
 extern void test_mkfs_complete_filesystem_pass(void);
 extern void test_mkfs_edge_cases_pass(void);
+extern void test_filesystem_integrity_validation(void);
+extern void test_filesystem_stress_with_validation(void);
+extern void test_filesystem_mkfs_fresh_creation(void);
 
 // Suite setup function - called once before all tests
 CU_SUITE_SETUP() {
@@ -102,6 +105,7 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_mkfs_root_directory_pass),
   CUNIT_CI_TEST(test_mkfs_complete_filesystem_pass),
   CUNIT_CI_TEST(test_mkfs_edge_cases_pass),
+  CUNIT_CI_TEST(test_filesystem_mkfs_fresh_creation),
   CUNIT_CI_TEST(test_typesize_pass),
   CUNIT_CI_TEST(test_buffer_pass),
   CUNIT_CI_TEST(test_block_pass),
@@ -110,6 +114,9 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_clist_pass),
   CUNIT_CI_TEST(test_buffer_edge_cases),
   CUNIT_CI_TEST(test_filesystem_simple_edge_cases),
+  CUNIT_CI_TEST(test_filesystem_integrity_validation),
+  CUNIT_CI_TEST(test_filesystem_stress_with_validation),
+  CUNIT_CI_TEST(test_filesystem_mkfs_fresh_creation),
   CUNIT_CI_TEST(test_lseek_pass),
   CUNIT_CI_TEST(test_link_pass),
   CUNIT_CI_TEST(test_rename_pass),
