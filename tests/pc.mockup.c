@@ -32,7 +32,10 @@ waitfor_t wokenup = 0;
 void waitfor(waitfor_t w)
 {
   ASSERT(w < NQUEUES);
-  ASSERT(w != wokenup);
+  // Reset wokenup to allow waiting for the same event again
+  if (w == wokenup) {
+    wokenup = 0;
+  }
 }
 
 

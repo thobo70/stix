@@ -1128,3 +1128,141 @@ int sync(void)
   syncall_buffers(false);
   return 0;
 }
+
+
+/**
+ * @brief Open a directory for reading
+ * 
+ * @param path Directory path to open
+ * @return int File descriptor for directory operations, -1 on error
+ */
+int opendir(const char *path)
+{
+  if (!path) {
+    /// @todo error invalid path
+    return -1;
+  }
+  
+  int fdesc = freefdesc();
+  if (fdesc < 0) {
+    /// @todo error no free file descriptor
+    return -1;
+  }
+  
+  namei_t in = namei(path);
+  if (in.i == NULL) {
+    /// @todo error path does not exist
+    return -1;
+  }
+  
+  if (in.i->dinode.ftype != DIRECTORY) {
+    /// @todo error not a directory
+    iput(in.i);
+    return -1;
+  }
+  
+  int f = getftabent(in.i);
+  if (f < 0) {
+    iput(in.i);
+    /// @todo error no free filetab entry
+    return -1;
+  }
+  
+  // Set up file table entry for directory reading
+  filetab[f].offset = 0;  // Start reading from beginning of directory
+  filetab[f].flags = OREAD;  // Directory is opened read-only
+  
+  // Set up file descriptor
+  active->u->fdesc[fdesc].ftabent = &filetab[f];
+  active->u->fdesc[fdesc].omode = OREAD;
+  
+  return fdesc;
+}
+
+/**
+ * @brief Close a directory file descriptor
+ * 
+ * @param fd Directory file descriptor
+ * @return int 0 on success, -1 on error
+ */
+int closedir(int fd)
+{
+  if (fd < 0 || fd >= MAXOPENFILES || !active->u->fdesc[fd].ftabent) {
+    /// @todo error invalid file descriptor
+    return -1;
+  }
+  
+  filetab_t *ft = active->u->fdesc[fd].ftabent;
+  if (!ft->inode || ft->inode->dinode.ftype != DIRECTORY) {
+    /// @todo error not a directory file descriptor
+    return -1;
+  }
+  
+  // Use the standard close mechanism
+  putftabent(fd);
+  active->u->fdesc[fd].ftabent = NULL;
+  
+  return 0;
+}
+
+/**
+ * @brief Read next directory entry
+ * 
+ * @param fd Directory file descriptor
+ * @param buf Buffer to store directory entry
+ * @return int 1 on success (entry read), 0 on end of directory, -1 on error
+ */
+int readdir(int fd, dirent_t *buf)
+{
+  if (fd < 0 || fd >= MAXOPENFILES || !active->u->fdesc[fd].ftabent || !buf) {
+    /// @todo error invalid parameters
+    return -1;
+  }
+  
+  filetab_t *ft = active->u->fdesc[fd].ftabent;
+  if (!ft->inode || ft->inode->dinode.ftype != DIRECTORY) {
+    /// @todo error not a directory file descriptor
+    return -1;
+  }
+  
+  iinode_t *dir_inode = ft->inode;
+  
+  // Check if we've reached the end of the directory
+  if (ft->offset >= dir_inode->dinode.fsize) {
+    return 0;  // End of directory
+  }
+  
+  // Ensure directory size is valid (multiple of dirent_t size)
+  ASSERT(dir_inode->dinode.fsize % sizeof(dirent_t) == 0);
+  
+  // Calculate which directory entry we're reading
+  fsize_t entry_offset = ft->offset;
+  
+  // Map the directory entry location to a block
+  bmap_t b = bmap(dir_inode, entry_offset);
+  if (b.fsblock == 0) {
+    /// @todo error reading directory block
+    return -1;
+  }
+  
+  // Read the block containing the directory entry
+  bhead_t *bh = bread(LDEVFROMINODE(dir_inode), b.fsblock);
+  if (!bh) {
+    /// @todo error reading directory block
+    return -1;
+  }
+  
+  // Get pointer to the directory entry in the buffer
+  dirent_t *de = (dirent_t *)&bh->buf->mem[b.offblock];
+  
+  // Copy the directory entry to user buffer
+  mcpy(buf, de, sizeof(dirent_t));
+  
+  // Release the buffer
+  brelse(bh);
+  
+  // Advance to next directory entry
+  ft->offset += sizeof(dirent_t);
+  
+  return 1;  // Successfully read an entry
+}

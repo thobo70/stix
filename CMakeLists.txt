@@ -111,8 +111,46 @@ add_executable(
 target_include_directories(
   mockup
   PUBLIC src/include
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# Note: Console driver demonstration removed - requires kernel/hardware access
+
+# Modular test suite configuration
+set(TEST_COMMON_SRC
+  tests/common/test_common.c
+  tests/tstcon.c
+  tests/tstdisk.c
+  tests/pc.mockup.c
+)
+
+set(TEST_UNIT_SRC
+  tests/unit/test_system.c
+  tests/unit/test_buffer.c
+  tests/unit/test_clist.c
+  tests/unit/test_filesystem.c
+  tests/unit/test_inode.c
+  tests/unit/test_clist_tstcon.c
+)
+
+# Build modular test executable
+add_executable(
+  tests_modular
+  tests/test_main.c
+  ${TEST_COMMON_SRC}
+  ${TEST_UNIT_SRC}
+  ${SRC}
+)
+
+target_include_directories(
+  tests_modular
+  PUBLIC src/include
+  PUBLIC tests
+)
+
+target_link_libraries(tests_modular PRIVATE cunit)
+
+# Keep legacy tests1 for compatibility
 add_executable(
   tests1
   tests/tests1.c
@@ -133,6 +171,12 @@ add_test(
   NAME mockup_test
   COMMAND mockup
 )
+
+add_test(
+  NAME tests_modular
+  COMMAND tests_modular
+)
+set_property(TEST tests_modular PROPERTY TIMEOUT "15")
 
 add_test(
   NAME tests1

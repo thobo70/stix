@@ -39,7 +39,7 @@ void sync_buffer_from_disk(bhead_t *b);
 void remove_buf_from_freelist(bhead_t *b)
 {
   ASSERT(b);
-  ASSERT(((b->hnext != NULL) ? b->hprev != NULL : b->hprev == NULL));
+  ASSERT((b->hnext == NULL) == (b->hprev == NULL));
   if (!b->infreelist)
     return;
 
