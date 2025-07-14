@@ -39,6 +39,19 @@ extern void test_clist_tstcon_stress_mode(void);
 extern void test_clist_tstcon_multiple_devices(void);
 extern void test_clist_tstcon_statistics_tracking(void);
 extern void test_clist_tstcon_comprehensive(void);
+extern void test_fsck_pass(void);
+extern void test_fsck_superblock_pass(void);
+extern void test_fsck_inodes_pass(void);
+extern void test_fsck_bitmap_pass(void);
+extern void test_fsck_filesystem_pass(void);
+extern void test_mkfs_pass(void);
+extern void test_mkfs_layout_pass(void);
+extern void test_mkfs_superblock_pass(void);
+extern void test_mkfs_inode_table_pass(void);
+extern void test_mkfs_bitmap_pass(void);
+extern void test_mkfs_root_directory_pass(void);
+extern void test_mkfs_complete_filesystem_pass(void);
+extern void test_mkfs_edge_cases_pass(void);
 
 // Suite setup function - called once before all tests
 CU_SUITE_SETUP() {
@@ -76,6 +89,19 @@ CU_TEST_TEARDOWN() {
 // Use CUNIT_CI_RUN for automatic test registration and execution
 CUNIT_CI_RUN(
   "STIX-modular-tests",
+  CUNIT_CI_TEST(test_fsck_pass),
+  CUNIT_CI_TEST(test_fsck_superblock_pass),
+  CUNIT_CI_TEST(test_fsck_inodes_pass),
+  CUNIT_CI_TEST(test_fsck_bitmap_pass),
+  CUNIT_CI_TEST(test_fsck_filesystem_pass),
+  CUNIT_CI_TEST(test_mkfs_pass),
+  CUNIT_CI_TEST(test_mkfs_layout_pass),
+  CUNIT_CI_TEST(test_mkfs_superblock_pass),
+  CUNIT_CI_TEST(test_mkfs_inode_table_pass),
+  CUNIT_CI_TEST(test_mkfs_bitmap_pass),
+  CUNIT_CI_TEST(test_mkfs_root_directory_pass),
+  CUNIT_CI_TEST(test_mkfs_complete_filesystem_pass),
+  CUNIT_CI_TEST(test_mkfs_edge_cases_pass),
   CUNIT_CI_TEST(test_typesize_pass),
   CUNIT_CI_TEST(test_buffer_pass),
   CUNIT_CI_TEST(test_block_pass),

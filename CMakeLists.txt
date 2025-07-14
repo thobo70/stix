@@ -76,6 +76,8 @@ set(SRC
   src/fs/blocks.c
   src/dd/dd.c
   src/util/utils.c
+  src/fsck/fsck.c
+  src/mkfs/mkfs.c
 )
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra -pedantic-errors")
@@ -131,6 +133,8 @@ set(TEST_UNIT_SRC
   tests/unit/test_filesystem.c
   tests/unit/test_inode.c
   tests/unit/test_clist_tstcon.c
+  tests/unit/test_fsck.c
+  tests/unit/test_mkfs.c
 )
 
 # Build modular test executable
@@ -166,6 +170,32 @@ target_include_directories(
 )
 
 target_link_libraries(tests1 PRIVATE cunit)
+
+# Standalone filesystem check utility
+add_executable(
+  fsck
+  src/fsck/fsck_main.c
+  src/fsck/fsck.c
+)
+
+target_include_directories(
+  fsck
+  PUBLIC src/include
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# Standalone make filesystem utility
+add_executable(
+  mkfs
+  src/mkfs/mkfs_main.c
+  src/mkfs/mkfs.c
+)
+
+target_include_directories(
+  mkfs
+  PUBLIC src/include
+  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 add_test(
   NAME mockup_test
