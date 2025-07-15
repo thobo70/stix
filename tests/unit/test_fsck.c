@@ -183,11 +183,11 @@ void test_fsck_inodes_pass(void) {
     mock_read_fail = 0;
     
     // Test invalid inode
-    create_valid_inodes(1);
-    dinode_t *inodes = (dinode_t *)test_sectors[1];
+    create_valid_inodes(2);  // Inodes start at sector 2 per STIX layout
+    dinode_t *inodes = (dinode_t *)test_sectors[2];
     inodes[2].ftype = 99;  // Invalid file type
     inodes[2].nlinks = 1;  // Make it appear used
-    result = fsck_check_inodes(1, 64);
+    result = fsck_check_inodes(2, 64);  // Check inodes starting at sector 2
     CU_ASSERT_EQUAL(result, FSCK_ERR_INVALID_INODE);
 }
 

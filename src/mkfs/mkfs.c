@@ -137,11 +137,11 @@ mkfs_result_t mkfs_calculate_layout(word_t total_sectors, word_t num_inodes, mkf
     // Calculate layout
     // Sector 0: unused/reserved
     // Sector 1: superblock
-    // Sector 1+: inode table
-    // Sector 1+inode_sectors: bitmap
-    // Sector 1+inode_sectors+bitmap_sectors: first data block
+    // Sector 2+: inode table
+    // Sector 2+inode_sectors: bitmap
+    // Sector 2+inode_sectors+bitmap_sectors: first data block
     
-    params->first_data_sector = 1 + params->inode_sectors + params->bitmap_sectors;
+    params->first_data_sector = 2 + params->inode_sectors + params->bitmap_sectors;
     
     if (params->first_data_sector >= total_sectors) {
         return MKFS_ERR_TOO_SMALL;
@@ -226,8 +226,8 @@ mkfs_result_t mkfs_create_inode_table(const mkfs_params_t *params) {
             }
         }
         
-        // Write this sector of the inode table
-        int result = g_write_sector(1 + sector, g_sector_buffer);
+        // Write this sector of the inode table (starts at sector 2)
+        int result = g_write_sector(2 + sector, g_sector_buffer);
         if (result != 0) {
             return MKFS_ERR_WRITE_FAILED;
         }
@@ -245,7 +245,7 @@ mkfs_result_t mkfs_create_bitmap(const mkfs_params_t *params) {
     }
     
     word_t bits_per_sector = MKFS_BLOCKSIZE * 8;
-    word_t bitmap_start = 1 + params->inode_sectors;
+    word_t bitmap_start = 2 + params->inode_sectors;
     
     for (word_t sector = 0; sector < params->bitmap_sectors; sector++) {
         // Clear the buffer

@@ -170,8 +170,8 @@ void test_mkfs_superblock_pass(void) {
     CU_ASSERT_EQUAL(sb->notclean, 0);
     CU_ASSERT_EQUAL(sb->ninodes, 64);
     CU_ASSERT_EQUAL(sb->nblocks, 100);
-    CU_ASSERT_EQUAL(sb->inodes, 1);
-    CU_ASSERT_TRUE(sb->bbitmap > 1);
+    CU_ASSERT_EQUAL(sb->inodes, 2);  // Inode table starts at sector 2 (after superblock)
+    CU_ASSERT_TRUE(sb->bbitmap > 2);  // Bitmap should be after inode table
     CU_ASSERT_TRUE(sb->firstblock > sb->bbitmap);
     
     // Test with write failure
@@ -200,7 +200,7 @@ void test_mkfs_inode_table_pass(void) {
     CU_ASSERT_EQUAL(result, MKFS_OK);
     
     // Verify root inode (inode 0) was created correctly
-    dinode_t *inodes = (dinode_t *)test_sectors[1];  // Inode table starts at sector 1
+    dinode_t *inodes = (dinode_t *)test_sectors[2];  // Inode table starts at sector 2
     CU_ASSERT_EQUAL(inodes[0].ftype, DIRECTORY);
     CU_ASSERT_EQUAL(inodes[0].fmode, 0755);
     CU_ASSERT_EQUAL(inodes[0].nlinks, 2);
@@ -237,12 +237,12 @@ void test_mkfs_bitmap_pass(void) {
     CU_ASSERT_EQUAL(result, MKFS_OK);
     
     // Verify bitmap was created - system blocks should be marked as used
-    word_t bitmap_start = 1 + params.inode_sectors;
+    word_t bitmap_start = 2 + params.inode_sectors;  // STIX layout: bitmap after inode table
     byte_t *bitmap = test_sectors[bitmap_start];
     
-    // First few bits should be set (superblock, inode table, bitmap, root dir)
-    CU_ASSERT_TRUE((bitmap[0] & 0x01) != 0);  // Superblock (block 0)
-    CU_ASSERT_TRUE((bitmap[0] & 0x02) != 0);  // Inode table (block 1)
+    // First few bits should be set (reserved, superblock, inode table, bitmap, root dir)
+    CU_ASSERT_TRUE((bitmap[0] & 0x01) != 0);  // Reserved (block 0)
+    CU_ASSERT_TRUE((bitmap[0] & 0x02) != 0);  // Superblock (block 1)
     
     // Test with write failure
     mock_write_fail = 1;
