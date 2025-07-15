@@ -243,7 +243,7 @@ fsck_result_t fsck_check_filesystem(fsck_stats_t *stats) {
     }
     
     // Read superblock again to get filesystem parameters
-    int read_result = g_read_sector(0, g_sector_buffer);
+    int read_result = g_read_sector(1, g_sector_buffer);  // Superblock is at sector 1
     if (read_result != 0) {
         return FSCK_ERR_READ_FAILED;
     }

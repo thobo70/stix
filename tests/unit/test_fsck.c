@@ -57,9 +57,9 @@ void create_valid_superblock(block_t sector) {
     sb->type = 1;
     sb->version = 1;
     sb->notclean = 0;
-    sb->inodes = 1;     // Inode table starts at sector 1
-    sb->bbitmap = 2;    // Bitmap starts at sector 2
-    sb->firstblock = 3; // First data block at sector 3
+    sb->inodes = 2;     // Inode table starts at sector 2 (after superblock at sector 1)
+    sb->bbitmap = 3;    // Bitmap starts at sector 3 (after inodes)
+    sb->firstblock = 4; // First data block at sector 4 (after bitmap)
     sb->ninodes = 64;   // 64 inodes
     sb->nblocks = 16;   // 16 total blocks
 }
@@ -139,29 +139,29 @@ void test_fsck_pass(void) {
  */
 void test_fsck_superblock_pass(void) {
     fsck_setup();
-    create_valid_superblock(0);
+    create_valid_superblock(1);  // Create superblock at sector 1 (correct location)
     
     // Test valid superblock
-    fsck_result_t result = fsck_check_superblock(0);
+    fsck_result_t result = fsck_check_superblock(1);  // Check sector 1
     CU_ASSERT_EQUAL(result, FSCK_OK);
     
     // Test invalid magic
-    superblock_t *sb = (superblock_t *)test_sectors[0];
+    superblock_t *sb = (superblock_t *)test_sectors[1];  // Superblock is at sector 1
     sb->magic = 0xDEADBEEF;
-    result = fsck_check_superblock(0);
+    result = fsck_check_superblock(1);  // Check sector 1
     CU_ASSERT_EQUAL(result, FSCK_ERR_INVALID_MAGIC);
     
     // Test read failure
     mock_read_fail = 1;
-    result = fsck_check_superblock(0);
+    result = fsck_check_superblock(1);  // Check sector 1
     CU_ASSERT_EQUAL(result, FSCK_ERR_READ_FAILED);
     mock_read_fail = 0;
     
     // Test invalid structure
-    create_valid_superblock(0);
-    sb = (superblock_t *)test_sectors[0];
+    create_valid_superblock(1);  // Create at sector 1
+    sb = (superblock_t *)test_sectors[1];  // Read from sector 1
     sb->ninodes = 0;  // Invalid
-    result = fsck_check_superblock(0);
+    result = fsck_check_superblock(1);  // Check sector 1
     CU_ASSERT_EQUAL(result, FSCK_ERR_INVALID_SUPERBLOCK);
 }
 
@@ -214,9 +214,9 @@ void test_fsck_bitmap_pass(void) {
  */
 void test_fsck_filesystem_pass(void) {
     fsck_setup();
-    create_valid_superblock(0);
-    create_valid_inodes(1);
-    create_valid_bitmap(2);
+    create_valid_superblock(1);  // Create superblock at sector 1 (correct location)
+    create_valid_inodes(2);      // Create inodes at sector 2 (after superblock)
+    create_valid_bitmap(3);      // Create bitmap at sector 3 (after inodes)
     
     // Test valid filesystem
     fsck_stats_t stats;
@@ -227,14 +227,14 @@ void test_fsck_filesystem_pass(void) {
     CU_ASSERT_EQUAL(stats.errors_found, 0);
     
     // Test with corrupted superblock
-    superblock_t *sb = (superblock_t *)test_sectors[0];
+    superblock_t *sb = (superblock_t *)test_sectors[1];  // Superblock is at sector 1
     sb->magic = 0xDEADBEEF;
     result = fsck_check_filesystem(&stats);
     CU_ASSERT_EQUAL(result, FSCK_ERR_INVALID_MAGIC);
     CU_ASSERT_EQUAL(stats.errors_found, 1);
     
     // Test without statistics
-    create_valid_superblock(0);
+    create_valid_superblock(1);  // Create superblock at sector 1
     result = fsck_check_filesystem(NULL);
     CU_ASSERT_EQUAL(result, FSCK_OK);
     
