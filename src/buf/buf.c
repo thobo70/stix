@@ -112,6 +112,58 @@ void syncall_buffers(int async)
       waitfor(BLOCKWRITE);
 }
 
+/**
+ * @brief sync all dirty buffers for a specific device to disk
+ * 
+ * This function iterates through all buffers and synchronously writes
+ * any dirty buffers belonging to the specified device to disk.
+ * This is critical for umount operations to ensure data consistency.
+ * 
+ * @param dev     device to sync buffers for
+ * @param async   if true, sync buffers asynchronously
+ */
+void sync_device_buffers(ldev_t dev, int async)
+{
+  bhead_t *last_synced = NULL;
+  
+  // Iterate through all buffers in the system
+  for (int i = 0; i < NBUFFER; i++) {
+    bhead_t *b = &bufhead[i];
+    
+    // Check if this buffer belongs to our device and needs writing
+    if (b->dev.ldev == dev.ldev && b->dwrite && b->valid) {
+      // Remove from free list if present
+      if (b->infreelist) {
+        remove_buf_from_freelist(b);
+      }
+      
+      // Mark buffer as busy to prevent concurrent access
+      b->busy = true;
+      
+      // Sync the buffer to disk
+      sync_buffer_to_disk(b);
+      last_synced = b;
+      
+      // If synchronous, wait for this buffer to complete
+      if (!async) {
+        while (!b->written) {
+          waitfor(BLOCKWRITE);
+        }
+        // Buffer is now clean and can be returned to free list
+        b->busy = false;
+        if (!b->infreelist) {
+          add_buf_to_freelist(b, false);
+        }
+      }
+    }
+  }
+  
+  // If async mode and we synced buffers, wake up waiters
+  if (async && last_synced) {
+    wakeall(BLOCKWRITE);
+  }
+}
+
 
 
 void check_bfreelist(void)

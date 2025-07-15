@@ -16,7 +16,7 @@ extern cdev_t tstcon;
 
 // Device tables required by the dd subsystem
 bdev_t *bdevtable[] = {
-  &tstdisk,
+  &tstdisk,  // major 0 for tstdisk
   NULL
 };
 

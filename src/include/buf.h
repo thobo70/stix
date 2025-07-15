@@ -75,6 +75,14 @@ bhead_t *getblk(ldev_t dev, block_t block);
  */
 void syncall_buffers(int async);
 
+/**
+ * @brief sync all dirty buffers for a specific device to disk
+ * 
+ * @param dev     device to sync buffers for
+ * @param async   if true, sync buffers asynchronously
+ */
+void sync_device_buffers(ldev_t dev, int async);
+
 
 
 /**

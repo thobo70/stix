@@ -9,7 +9,13 @@
   CUNIT_CI_TEST(test_clist_tstcon_stress_mode),
   CUNIT_CI_TEST(test_clist_tstcon_multiple_devices),
   CUNIT_CI_TEST(test_clist_tstcon_statistics_tracking),
-  CUNIT_CI_TEST(test_clist_tstcon_comprehensive)
+  CUNIT_CI_TEST(test_clist_tstcon_comprehensive),
+  CUNIT_CI_TEST(test_endian_conversion_functions),
+  CUNIT_CI_TEST(test_endian_magic_number_validation),
+  CUNIT_CI_TEST(test_endian_invalid_magic_rejection),
+  CUNIT_CI_TEST(test_endian_simulated_scenarios),
+  CUNIT_CI_TEST(test_endian_mkfs_integration),
+  CUNIT_CI_TEST(test_endian_byte_representation)
 )
  * @date 2023-11-01
  * 
@@ -75,6 +81,14 @@ extern void test_umount_busy_filesystem(void);
 extern void test_mount_superblock_handling(void);
 extern void test_mount_umount_edge_cases(void);
 extern void test_mount_umount_comprehensive(void);
+
+// Endian independence tests
+extern void test_endian_conversion_functions(void);
+extern void test_endian_magic_number_validation(void);
+extern void test_endian_invalid_magic_rejection(void);
+extern void test_endian_simulated_scenarios(void);
+extern void test_endian_mkfs_integration(void);
+extern void test_endian_byte_representation(void);
 
 // Suite setup function - called once before all tests
 CU_SUITE_SETUP() {
@@ -163,5 +177,11 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_clist_tstcon_stress_mode),
   CUNIT_CI_TEST(test_clist_tstcon_multiple_devices),
   CUNIT_CI_TEST(test_clist_tstcon_statistics_tracking),
-  CUNIT_CI_TEST(test_clist_tstcon_comprehensive)
+  CUNIT_CI_TEST(test_clist_tstcon_comprehensive),
+  CUNIT_CI_TEST(test_endian_conversion_functions),
+  CUNIT_CI_TEST(test_endian_magic_number_validation),
+  CUNIT_CI_TEST(test_endian_invalid_magic_rejection),
+  CUNIT_CI_TEST(test_endian_simulated_scenarios),
+  CUNIT_CI_TEST(test_endian_mkfs_integration),
+  CUNIT_CI_TEST(test_endian_byte_representation)
 )

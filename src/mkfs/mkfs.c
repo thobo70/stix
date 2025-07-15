@@ -9,16 +9,15 @@
  * 
  */
 
-#include "mkfs.h"
-#include "blocks.h"
-#include "inode.h"
-#include "fs.h"
 #include <string.h>
-
-/** Magic number for filesystem superblock */
-#define MKFS_MAGIC_NUMBER 0x73746978  // "stix" in hex
+#include "../include/mkfs.h"
+#include "../include/blocks.h"  // For STIX_MAGIC_NUMBER and other constants
+#include "../include/buf.h"
+#include "../include/inode.h"
+#include "../include/fs.h"
 
 /** Default ratio: one inode per 4 data blocks */
+#define MKFS_DEFAULT_INODE_RATIO 4
 #define MKFS_DEFAULT_INODE_RATIO 4
 
 /** Minimum number of inodes */
@@ -136,7 +135,8 @@ mkfs_result_t mkfs_calculate_layout(word_t total_sectors, word_t num_inodes, mkf
     params->bitmap_sectors = (total_sectors + bits_per_sector - 1) / bits_per_sector;
     
     // Calculate layout
-    // Sector 0: superblock
+    // Sector 0: unused/reserved
+    // Sector 1: superblock
     // Sector 1+: inode table
     // Sector 1+inode_sectors: bitmap
     // Sector 1+inode_sectors+bitmap_sectors: first data block
@@ -165,18 +165,18 @@ mkfs_result_t mkfs_create_superblock(const mkfs_params_t *params) {
     
     // Create superblock
     superblock_t *sb = (superblock_t *)g_sector_buffer;
-    sb->magic = MKFS_MAGIC_NUMBER;
-    sb->type = 1;
-    sb->version = 1;
+    sb->magic = STIX_MAGIC_LE;  // Store magic number in little-endian format
+    sb->type = STIX_TYPE;
+    sb->version = STIX_VERSION;
     sb->notclean = 0;
-    sb->inodes = 1;  // Inode table starts at sector 1
-    sb->bbitmap = 1 + params->inode_sectors;  // Bitmap after inode table
+    sb->inodes = 2;  // Inode table starts at sector 2 (after superblock at sector 1)
+    sb->bbitmap = 2 + params->inode_sectors;  // Bitmap after inode table
     sb->firstblock = params->first_data_sector;
     sb->ninodes = params->num_inodes;
     sb->nblocks = params->total_sectors;
     
-    // Write superblock to sector 0
-    int result = g_write_sector(0, g_sector_buffer);
+    // Write superblock to sector 1 (STIX filesystem layout)
+    int result = g_write_sector(1, g_sector_buffer);
     if (result != 0) {
         return MKFS_ERR_WRITE_FAILED;
     }

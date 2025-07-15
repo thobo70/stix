@@ -10,6 +10,7 @@
  */
 
 #include "tdefs.h"
+#include <stdio.h>
 #include "inode.h"
 #include "blocks.h"
 #include "buf.h"
@@ -159,7 +160,7 @@ void add_inode_to_freelist(iinode_t *inode, int asFirst)
 void move_inode_to_hashqueue(iinode_t *inode, fsnum_t fs, ninode_t inum)
 {
   ASSERT(inode);
-  ASSERT(fs < MAXFS);
+  ASSERT(fs > 0 && fs <= MAXFS);
   ASSERT(inum < getisblock(fs)->dsblock.ninodes);
   iinode_t *p = HTAB(fs, inum);
   if (inode->hnext) {
@@ -212,7 +213,7 @@ iinode_t *ialloc(fsnum_t fs, ftype_t ftype, fmode_t fmode)
   bhead_t *bhead = NULL;
   dinode_t *dinode = NULL;
 
-  ASSERT(fs < MAXFS);
+  ASSERT(fs > 0 && fs <= MAXFS);
 
   isuperblock_t *isbk = getisblock(fs);
   // block_t firstinodeblock = SUPERBLOCKINODE(fs);
@@ -340,7 +341,7 @@ iinode_t *iget(fsnum_t fs, ninode_t inum)
   iinode_t *i, *found = NULL;
   bhead_t *bhead = NULL;
 
-  ASSERT(fs < MAXFS);
+  ASSERT(fs > 0 && fs <= MAXFS);
   ASSERT(inum < getisblock(fs)->dsblock.ninodes);
   for(;;) {
     ASSERT(fs == getisblock(fs)->fs);
@@ -493,7 +494,6 @@ bmap_t bmap(iinode_t *inode, fsize_t pos)
  */
 namei_t namei(const char *p)
 {
-  namei_t rtn = {NULL, 0, 0};
   iinode_t *wi = NULL;    // working inode
   dword_t i, n;           // index and number of directory entries 
   int ps;                 // size of current path name part
@@ -505,6 +505,11 @@ namei_t namei(const char *p)
 
   ASSERT(p);
   ASSERT(active);
+  
+  // Initialize return structure with proper default filesystem
+  fsnum_t default_fs = (active->u->fsroot) ? active->u->fsroot->fs : 1;
+  namei_t rtn = {NULL, 0, default_fs};
+  
   if (*p == 0)
     return rtn;
   if (*p == '/') {
@@ -515,6 +520,7 @@ namei_t namei(const char *p)
   if (!wi)
     return rtn;
 
+  fs = wi->fs;  // Initialize fs to the working inode's filesystem
   rtn.p = wi->inum;
   while (*p)  {
     for ( ps = 0 ; p[ps] && (p[ps] != '/') ; ++ps );
@@ -562,6 +568,9 @@ namei_t namei(const char *p)
           rtn.fs = wi->fs;
           iput(wi);
           wi = iget(fs, de->inum);  // iget take care of mounted fs
+          if (wi) {
+            fs = wi->fs;  // Update fs to handle mount point redirection
+          }
           found = true;
         }
         brelse(bh);
@@ -582,6 +591,7 @@ namei_t namei(const char *p)
   }
   
   rtn.i = wi;
+  rtn.fs = wi->fs;  // Ensure fs is set to the final inode's filesystem
   return rtn;
 }
 

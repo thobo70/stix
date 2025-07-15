@@ -28,7 +28,7 @@
 #define SIMBMAPBITS (BLOCKSIZE * 8)
 #define SIMBMAPBLOCKS ((SIMNBLOCKS / SIMBMAPBITS) + (((SIMNBLOCKS % SIMBMAPBITS) == 0) ? 0 : 1))
 
-#define SIMNMINOR 2
+#define SIMNMINOR 8
 
 typedef struct simfs {
   buffer_t block0;
@@ -48,13 +48,16 @@ typedef union {
   buffer_t block[SIMNBLOCKS];
 } simpart_t;
 
-simpart_t *part[SIMNMINOR] =  { NULL, NULL };
+simpart_t *part[SIMNMINOR] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
+
+// Global variable to track current minor device for mkfs operations  
+static ldevminor_t g_current_minor = 0;
 
 /**
  * @brief Sector read function for mkfs/fsck integration
  */
 int tstdisk_read_sector(block_t sector_number, byte_t *buffer) {
-    ldevminor_t minor = 0; // Use default minor device
+    ldevminor_t minor = g_current_minor; // Use current minor device for mkfs
     if (minor >= SIMNMINOR || sector_number >= SIMNBLOCKS || !part[minor]) {
         return -1; // Error
     }
@@ -66,7 +69,7 @@ int tstdisk_read_sector(block_t sector_number, byte_t *buffer) {
  * @brief Sector write function for mkfs integration
  */
 int tstdisk_write_sector(block_t sector_number, const byte_t *buffer) {
-    ldevminor_t minor = 0; // Use default minor device
+    ldevminor_t minor = g_current_minor; // Use current minor device for mkfs
     if (minor >= SIMNMINOR || sector_number >= SIMNBLOCKS || !part[minor]) {
         return -1; // Error
     }
@@ -156,6 +159,9 @@ int tstdisk_create_fresh_fs(ldevminor_t minor, word_t sectors, word_t inodes) {
     // Clear the simulated disk
     mset(part[minor], 0, sizeof(simpart_t));
     
+    // Set the current minor device for mkfs operations
+    g_current_minor = minor;
+    
     // Initialize mkfs module
     mkfs_result_t result = mkfs_init(tstdisk_read_sector, tstdisk_write_sector);
     if (result != MKFS_OK) {
@@ -236,7 +242,7 @@ void testdiskread(byte_t *buf, ldevminor_t minor, block_t bidx)
  */
 void tstdisk_open(ldevminor_t minor)
 {
-  ASSERT(minor < 1);
+  ASSERT(minor < SIMNMINOR);
   // Free existing allocation to prevent memory leak
   if (part[minor]) {
     free(part[minor]);
@@ -272,7 +278,7 @@ void tstdisk_open(ldevminor_t minor)
 
 void tstdisk_close(ldevminor_t minor)
 {
-  ASSERT(minor < 1);
+  ASSERT(minor < SIMNMINOR);
   if (part[minor]) {
     free(part[minor]);
     part[minor] = NULL;  // Prevent double-free
@@ -281,7 +287,7 @@ void tstdisk_close(ldevminor_t minor)
 
 void tstdisk_strategy(ldevminor_t minor, bhead_t *bh)
 {
-  ASSERT(minor < 1);
+  ASSERT(minor < SIMNMINOR);
   ASSERT(bh);
 
   int wr = bh->valid;

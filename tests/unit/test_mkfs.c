@@ -162,7 +162,9 @@ void test_mkfs_superblock_pass(void) {
     
     // Verify superblock was written correctly
     superblock_t *sb = (superblock_t *)test_sectors[0];
-    CU_ASSERT_EQUAL(sb->magic, 0x73746978);  // "stix"
+    // Check magic number using endian-safe comparison
+    dword_t stored_magic = stix_le32toh(sb->magic);
+    CU_ASSERT_EQUAL(stored_magic, STIX_MAGIC_NUMBER);  // Endian-independent comparison
     CU_ASSERT_EQUAL(sb->type, 1);
     CU_ASSERT_EQUAL(sb->version, 1);
     CU_ASSERT_EQUAL(sb->notclean, 0);

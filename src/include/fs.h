@@ -15,7 +15,7 @@
 #include "tdefs.h"
 #include "inode.h"
 
-#define MAXFS 6           ///< maximum number of file systems
+#define MAXFS 10           ///< maximum number of file systems
 #define MAXOPENFILES 10   ///< maximum number of open files per process
 #define MAXFILETAB 100    ///< maximum number of open files system wide
 #define DIRNAMEENTRY 14   ///< maximum length of directory entry name
@@ -55,6 +55,7 @@ typedef struct filetab_t {
 
 void init_fs(void);
 int mknode(const char *path, ftype_t ftype, fmode_t fmode);
+int mknod(const char *path, ftype_t ftype, fmode_t fmode, ldevmajor_t major, ldevminor_t minor);
 int open(const char *fname, omode_t omode, fmode_t fmode);
 int close(int fd);
 int read(int fdesc, byte_t *buf, fsize_t nbytes);

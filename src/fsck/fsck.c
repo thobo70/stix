@@ -9,13 +9,9 @@
  * 
  */
 
-#include "fsck.h"
-#include "blocks.h"
-#include "inode.h"
 #include <string.h>
-
-/** Magic number for filesystem superblock */
-#define FSCK_MAGIC_NUMBER 0x73746978  // "stix" in hex
+#include "../include/fsck.h"
+#include "../include/blocks.h"  // For STIX_MAGIC_NUMBER and other constants
 
 /** Global read function pointer */
 static fsck_read_sector_fn g_read_sector = NULL;
@@ -95,8 +91,9 @@ fsck_result_t fsck_check_superblock(block_t sector_number) {
     // Cast buffer to superblock structure
     superblock_t *sb = (superblock_t *)g_sector_buffer;
     
-    // Check magic number
-    if (sb->magic != FSCK_MAGIC_NUMBER) {
+    // Check magic number - convert from little-endian to host byte order
+    dword_t stored_magic = stix_le32toh(sb->magic);
+    if (stored_magic != STIX_MAGIC_NUMBER) {
         return FSCK_ERR_INVALID_MAGIC;
     }
     
@@ -236,8 +233,8 @@ fsck_result_t fsck_check_filesystem(fsck_stats_t *stats) {
         fsck_reset_stats(stats);
     }
     
-    // Check superblock (assume it's at sector 0)
-    fsck_result_t result = fsck_check_superblock(0);
+    // Check superblock (STIX filesystem layout - superblock at sector 1)
+    fsck_result_t result = fsck_check_superblock(1);
     if (result != FSCK_OK) {
         if (stats != NULL) {
             stats->errors_found++;

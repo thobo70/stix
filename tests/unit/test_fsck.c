@@ -53,7 +53,7 @@ void fsck_setup(void) {
 void create_valid_superblock(block_t sector) {
     superblock_t *sb = (superblock_t *)test_sectors[sector];
     
-    sb->magic = 0x73746978;  // "stix" magic
+    sb->magic = STIX_MAGIC_LE;  // Store magic in little-endian format
     sb->type = 1;
     sb->version = 1;
     sb->notclean = 0;

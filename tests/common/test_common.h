@@ -45,7 +45,7 @@
 #define TEST_ITERATIONS_DEFAULT 10  ///< Default number of test iterations
 
 // Test disk simulation constants (from tstdisk.c)
-#define TEST_SIMNBLOCKS 128         ///< Number of blocks in simulated disk
+#define TEST_SIMNBLOCKS 2048        ///< Number of blocks in simulated disk (increased for more inodes)
 
 // External references
 extern process_t *active;

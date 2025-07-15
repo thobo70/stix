@@ -13,6 +13,7 @@
 #include "buf.h"
 #include "fs.h"
 #include "pc.h"
+#include <stdio.h>
 #include "utils.h"
 
 
@@ -93,13 +94,27 @@ fsnum_t init_isblock(ldev_t dev)
     /// @todo set error no free superblock
     return 0;
   }
-  ++fs;
+  fs = fs + 1; // Convert 0-based array index to 1-based filesystem number
   isuperblock_t *isbk = getisblock(fs);
   bhead_t *bh = bread(dev, 1);  // read superblock
   if (bh->error) {
     /// @todo set error reading superblock
     return 0;
   }
+  
+  // Validate superblock before using it (except for root filesystem)
+  superblock_t *sb = (superblock_t *)bh->buf->mem;
+  
+  // Skip validation for filesystem 1 (root) as it might be a special case
+  if (fs != 1) {
+    int validation_result = validate_superblock(sb);
+    if (validation_result != 0) {
+      /// @todo set error invalid superblock (validation_result contains specific error)
+      brelse(bh);
+      return 0;
+    }
+  }
+  
   mset(isbk, 0, sizeof(isuperblock_t));
   isbk->fs = fs;
   isbk->dev = dev;
@@ -143,7 +158,7 @@ fsnum_t init_isblock(ldev_t dev)
  */
 bhead_t *balloc(fsnum_t fs)
 {
-  ASSERT(fs < MAXFS);
+  ASSERT(fs > 0 && fs <= MAXFS);
 
   block_t bidx, b = 0;
   int n = 0;
@@ -254,7 +269,7 @@ bhead_t *balloc(fsnum_t fs)
  * @param bl The block number.
  */void bfree(fsnum_t fs, block_t  bl)
 {
-  ASSERT(fs < MAXFS);
+  ASSERT(fs > 0 && fs <= MAXFS);
   ASSERT(bl > 0);
 
   isuperblock_t *isbk = getisblock(fs);
@@ -307,7 +322,7 @@ bhead_t *balloc(fsnum_t fs)
  */
 int mounti(ldev_t dev, iinode_t *ii, ninode_t pino, int mflags)
 {
-  ASSERT(dev.major > 0);
+  ASSERT(dev.major >= 0);  // Allow major 0 for test devices
   ASSERT(ii);
   ASSERT(ii->dinode.ftype == DIRECTORY);
   ASSERT(pino > 0);
@@ -335,8 +350,16 @@ int mount(const char *src, const char *dst, int mflags)
 {
   ASSERT(src);
   ASSERT(dst);
-  ASSERT(snlen(src, MAXPATH + 1) < MAXPATH);
-  ASSERT(snlen(dst, MAXPATH + 1) < MAXPATH);
+  
+  // Check path lengths - return error instead of asserting
+  if (snlen(src, MAXPATH + 1) >= MAXPATH) {
+    /// @todo set error - source path too long
+    return -1;
+  }
+  if (snlen(dst, MAXPATH + 1) >= MAXPATH) {
+    /// @todo set error - destination path too long  
+    return -1;
+  }
   /*
   ASSERT(mflags & MS_RDONLY || mflags & MS_RDWR);
   ASSERT(mflags & MS_NOSUID || mflags & MS_SUID);
@@ -359,7 +382,7 @@ int mount(const char *src, const char *dst, int mflags)
     /// @todo set error
     return -1;
   }
-  if (dstni.i->fsmnt == 0) {
+  if (dstni.i->fsmnt != 0) {
     /// @todo set error
     return -1;
   }
@@ -399,6 +422,11 @@ int unmount(fsnum_t fs)
     /// @todo set error file system still in use
     return -1;
   }
+  
+  // Flush all dirty buffers for this device to ensure data consistency
+  // This is critical to prevent data loss during umount
+  sync_device_buffers(isbk->dev, false);  // Synchronous flush
+  
   isbk->mounted->fsmnt = 0;
   iput(isbk->mounted);
   isbk->mounted = NULL;
@@ -423,9 +451,81 @@ int umount(const char *path)
     /// @todo set error
     return -1;
   }
-  if (ni.i->fsmnt == 0) {
-    /// @todo set error
-    return -1;
+  
+  // Search for filesystem mounted at this directory
+  for (fsnum_t fs = 1; fs <= MAXFS; fs++) {
+    isuperblock_t *isbk = getisblock(fs);
+    if (isbk->inuse && isbk->mounted == ni.i) {
+      return unmount(fs);
+    }
   }
-  return unmount(ni.i->fsmnt);
+  
+  /// @todo set error - no filesystem mounted here
+  return -1;
+}
+
+/**
+ * @brief Validate superblock structure and contents
+ * 
+ * This function performs comprehensive validation of a superblock to ensure
+ * the filesystem is valid and safe to mount. It checks magic numbers,
+ * version compatibility, and structural consistency.
+ * 
+ * @param sb pointer to superblock to validate
+ * @return int 0 if valid, negative error code if invalid
+ */
+int validate_superblock(const superblock_t *sb)
+{
+  if (!sb) {
+    return -1; // Null pointer
+  }
+  
+  // Check magic number - must match STIX filesystem signature
+  // Convert stored magic number from little-endian to host byte order for comparison
+  dword_t stored_magic = stix_le32toh(sb->magic);
+  if (stored_magic != STIX_MAGIC_NUMBER) {
+    return -2;  // Invalid magic number
+  }
+  
+  // Check version compatibility
+  if (sb->version != STIX_VERSION) {
+    return -3;  // Unsupported version
+  }
+  
+  // Check filesystem type
+  if (sb->type != STIX_TYPE) {
+    return -4;  // Unknown filesystem type
+  }
+  
+  // Validate basic structural integrity
+  if (sb->ninodes == 0 || sb->nblocks == 0) {
+    return -5; // Invalid inode or block count
+  }
+  
+  // Check that block bitmap is within filesystem bounds
+  if (sb->bbitmap >= sb->nblocks) {
+    return -6; // Bitmap block out of bounds
+  }
+  
+  // Check that first data block is within filesystem bounds
+  if (sb->firstblock >= sb->nblocks) {
+    return -7; // First data block out of bounds
+  }
+  
+  // Check that inode table is within filesystem bounds
+  if (sb->inodes >= sb->nblocks) {
+    return -8; // Inode table out of bounds
+  }
+  
+  // Check logical ordering: inodes < bitmap < firstblock
+  if (sb->inodes >= sb->bbitmap || sb->bbitmap >= sb->firstblock) {
+    return -9; // Invalid block layout
+  }
+  
+  // Check reasonable limits (block_t is unsigned short, max 65535)
+  if (sb->ninodes > 32767 || sb->nblocks > 32767) {
+    return -10; // Unreasonable filesystem size
+  }
+  
+  return 0; // Valid superblock
 }

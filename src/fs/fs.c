@@ -10,6 +10,7 @@
  */
 
 #include "tdefs.h"
+#include <stdio.h>
 
 #include "fs.h"
 #include "blocks.h"
@@ -334,6 +335,55 @@ int mknode(const char *path, ftype_t ftype, fmode_t fmode)
   if (ii == NULL) {
     iput(pi);
     return -1;   // error already set by ialloc
+  }
+
+  int rtn = linki(ii, path);
+  iput(ii);
+  iput(pi);
+  return rtn;
+}
+
+
+
+/**
+ * @brief make node with device numbers (like Unix mknod)
+ * 
+ * @param path    path to create
+ * @param ftype   file type  
+ * @param fmode   file mode
+ * @param major   major device number (for BLOCK/CHARACTER devices)
+ * @param minor   minor device number (for BLOCK/CHARACTER devices)
+ * @return int    0 on success, -1 on error
+ */
+int mknod(const char *path, ftype_t ftype, fmode_t fmode, ldevmajor_t major, ldevminor_t minor)
+{
+  if (!path || (ftype != REGULAR && ftype != DIRECTORY && ftype != CHARACTER && ftype != BLOCK && ftype != FIFO)) {
+    /// @todo error invalid parameters
+    return -1;
+  }
+  namei_t in = namei(path);
+  if (in.i != NULL) {
+    iput(in.i);
+    /// @todo error link already exists
+    return -1;
+  }
+  if (in.p == 0)    // parent dir not found
+    return -1;   // error already set by namei
+  iinode_t *pi = iget(in.fs, in.p);
+  if (pi == NULL)
+    return -1;   // error already set by iget
+
+  iinode_t *ii = ialloc(in.fs, ftype, fmode);
+  if (ii == NULL) {
+    iput(pi);
+    return -1;   // error already set by ialloc
+  }
+
+  // Set device numbers for block and character devices
+  if (ftype == BLOCK || ftype == CHARACTER) {
+    ii->dinode.ldev.major = major;
+    ii->dinode.ldev.minor = minor;
+    ii->modified = true;
   }
 
   int rtn = linki(ii, path);
