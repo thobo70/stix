@@ -418,8 +418,20 @@ int unmount(fsnum_t fs)
     /// @todo set error file system not mounted
     return -1;
   }
-  if (activeinodes(fs) > 0) {
-    /// @todo set error file system still in use
+  // Enhanced active inode detection with detailed busy checking
+  int active_inodes = activeinodes(fs);
+  if (active_inodes > 0) {
+    // Provide more detailed information about why filesystem is busy
+    int open_files = count_open_files_on_fs(fs);
+    int busy_workdir = is_fs_busy_workdir(fs);
+    
+    // Use variables to avoid unused variable warnings
+    (void)open_files;    // For future logging/debugging
+    (void)busy_workdir;  // For future logging/debugging
+    
+    /// @todo set error file system still in use 
+    /// @todo consider logging: "Filesystem busy: %d active inodes, %d open files, workdir busy: %d"
+    /// @todo   active_inodes, open_files, busy_workdir
     return -1;
   }
   

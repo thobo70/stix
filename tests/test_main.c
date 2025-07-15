@@ -90,6 +90,10 @@ extern void test_endian_simulated_scenarios(void);
 extern void test_endian_mkfs_integration(void);
 extern void test_endian_byte_representation(void);
 
+// Active inode detection tests
+extern void test_improved_active_inode_detection(void);
+extern void test_file_open_detection(void);
+
 // Suite setup function - called once before all tests
 CU_SUITE_SETUP() {
   init_dd();
@@ -183,5 +187,7 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_endian_invalid_magic_rejection),
   CUNIT_CI_TEST(test_endian_simulated_scenarios),
   CUNIT_CI_TEST(test_endian_mkfs_integration),
-  CUNIT_CI_TEST(test_endian_byte_representation)
+  CUNIT_CI_TEST(test_endian_byte_representation),
+  CUNIT_CI_TEST(test_improved_active_inode_detection),
+  CUNIT_CI_TEST(test_file_open_detection)
 )

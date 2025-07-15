@@ -137,6 +137,7 @@ set(TEST_UNIT_SRC
   tests/unit/test_mkfs.c
   tests/unit/test_mount.c
   tests/unit/test_endian.c
+  tests/unit/test_active_inode_detection.c
 )
 
 # Build modular test executable

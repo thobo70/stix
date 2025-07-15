@@ -127,5 +127,7 @@ bmap_t bmap(iinode_t *inode, fsize_t pos);
 void free_all_blocks(iinode_t *inode);
 
 int activeinodes(fsnum_t fs);
+int count_open_files_on_fs(fsnum_t fs);
+int is_fs_busy_workdir(fsnum_t fs);
 
 #endif
