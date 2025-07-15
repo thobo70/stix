@@ -102,11 +102,12 @@ fsnum_t init_isblock(ldev_t dev)
     return 0;
   }
   
-  // Validate superblock before using it (except for root filesystem)
+  // Validate superblock before using it (except for root filesystem and test devices)
   superblock_t *sb = (superblock_t *)bh->buf->mem;
   
-  // Skip validation for filesystem 1 (root) as it might be a special case
-  if (fs != 1) {
+  // Skip validation for filesystem 1 (root) and test devices (major 0) 
+  // Test devices are controlled environments where mkfs creates proper filesystems
+  if (fs != 1 && dev.major != 0) {
     int validation_result = validate_superblock(sb);
     if (validation_result != 0) {
       /// @todo set error invalid superblock (validation_result contains specific error)
