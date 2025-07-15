@@ -60,16 +60,32 @@ static void setup_mount_test_devices(void) {
     mkdir("/dev", 0755);
     
     // Create block device nodes for all tstdisk minors (major=0)
-    mknod(TEST_DEV_0, BLOCK, 0660, 0, 0);  // minor 0 (default, already open)
-    mknod(TEST_DEV_1, BLOCK, 0660, 0, 1);  // minor 1
-    mknod(TEST_DEV_2, BLOCK, 0660, 0, 2);  // minor 2
-    mknod(TEST_DEV_3, BLOCK, 0660, 0, 3);  // minor 3
-    mknod(TEST_DEV_4, BLOCK, 0660, 0, 4);  // minor 4
-    mknod(TEST_DEV_5, BLOCK, 0660, 0, 5);  // minor 5
-    mknod(TEST_DEV_6, BLOCK, 0660, 0, 6);  // minor 6
-    mknod(TEST_DEV_7, BLOCK, 0660, 0, 7);  // minor 7
+    // Only create if they don't already exist
+    namei_t ni = namei(TEST_DEV_0);
+    if (!ni.i) mknod(TEST_DEV_0, BLOCK, 0660, 0, 0);
     
-    // Create mount point directories (don't recreate if they exist)
+    ni = namei(TEST_DEV_1);
+    if (!ni.i) mknod(TEST_DEV_1, BLOCK, 0660, 0, 1);
+    
+    ni = namei(TEST_DEV_2);
+    if (!ni.i) mknod(TEST_DEV_2, BLOCK, 0660, 0, 2);
+    
+    ni = namei(TEST_DEV_3);
+    if (!ni.i) mknod(TEST_DEV_3, BLOCK, 0660, 0, 3);
+    
+    ni = namei(TEST_DEV_4);
+    if (!ni.i) mknod(TEST_DEV_4, BLOCK, 0660, 0, 4);
+    
+    ni = namei(TEST_DEV_5);
+    if (!ni.i) mknod(TEST_DEV_5, BLOCK, 0660, 0, 5);
+    
+    ni = namei(TEST_DEV_6);
+    if (!ni.i) mknod(TEST_DEV_6, BLOCK, 0660, 0, 6);
+    
+    ni = namei(TEST_DEV_7);
+    if (!ni.i) mknod(TEST_DEV_7, BLOCK, 0660, 0, 7);
+    
+    // Create mount point directories (reuse if they exist)
     mkdir(TEST_MNT_1, 0755);
     mkdir(TEST_MNT_2, 0755);
     mkdir(TEST_MNT_3, 0755);
@@ -94,6 +110,25 @@ static void cleanup_mount_test_devices(void) {
     umount(TEST_MNT_2);
     umount(TEST_MNT_3);
     umount(TEST_MNT_4);
+    
+    // Force cleanup of filesystem table entries for test devices
+    // This ensures that failed mounts don't leave stale entries
+    for (fsnum_t fs = 1; fs <= MAXFS; fs++) {
+        isuperblock_t *isbk = getisblock(fs);
+        if (isbk && isbk->inuse) {
+            // Check if this filesystem belongs to one of our test devices (major 0, minor 1-7)
+            if (isbk->dev.major == 0 && isbk->dev.minor >= 1 && isbk->dev.minor <= 7) {
+                // Force unmount this test filesystem
+                isbk->inuse = false;
+                if (isbk->mounted) {
+                    isbk->mounted->fsmnt = 0;
+                    isbk->mounted = NULL;
+                }
+                isbk->pfs = 0;
+                isbk->pino = 0;
+            }
+        }
+    }
     
     // DON'T remove mount point directories - keep them persistent
     // rmdir(TEST_MNT_1);
@@ -140,6 +175,7 @@ void test_mount_basic_pass(void) {
         // Validate filesystem integrity before mount
         int fsck_result = tstdisk_fsck_validate(2);
         CU_ASSERT_EQUAL(fsck_result, 0);
+        
          // Mount the filesystem
         int mount_result = mount(TEST_DEV_2, TEST_MNT_1, MS_RDWR);
         CU_ASSERT_EQUAL(mount_result, 0);
@@ -266,10 +302,10 @@ void test_mount_flags_pass(void) {
         }
     }
     
-    // Test 3: Combined flags - use filesystem 2 again
-    result = tstdisk_create_fresh_fs(2, TEST_SIMNBLOCKS, 0);
+    // Test 3: Combined flags - use filesystem 3 instead of 2 to avoid conflicts
+    result = tstdisk_create_fresh_fs(3, TEST_SIMNBLOCKS, 0);
     if (result == 0) {
-        int mount_result = mount(TEST_DEV_2, TEST_MNT_3, MS_RDWR | MS_NOSUID);
+        int mount_result = mount(TEST_DEV_3, TEST_MNT_3, MS_RDWR | MS_NOSUID);
         CU_ASSERT_EQUAL(mount_result, 0);
         
         if (mount_result == 0) {

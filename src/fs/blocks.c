@@ -326,6 +326,7 @@ int mounti(ldev_t dev, iinode_t *ii, ninode_t pino, int mflags)
   ASSERT(ii);
   ASSERT(ii->dinode.ftype == DIRECTORY);
   ASSERT(pino > 0);
+  
   fsnum_t fs = init_isblock(dev);
   if (fs == 0) {
     /// @todo set error no free superblock
@@ -386,6 +387,7 @@ int mount(const char *src, const char *dst, int mflags)
     /// @todo set error
     return -1;
   }
+  
   namei_t srcni = namei(src);
   if (!srcni.i) {
     /// @todo set error
@@ -394,7 +396,8 @@ int mount(const char *src, const char *dst, int mflags)
   if (srcni.i->dinode.ftype != BLOCK) {
     /// @todo set error
     return -1;
-  }  
+  }
+  
   return mounti(srcni.i->dinode.ldev, dstni.i, dstni.p, mflags);
 }
 
