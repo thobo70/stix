@@ -166,7 +166,6 @@ static void test_typesize_pass(void) {
   CU_ASSERT_EQUAL_FATAL(sizeof(byte_t), 1);
   CU_ASSERT_EQUAL_FATAL(sizeof(word_t), 2);
   CU_ASSERT_EQUAL_FATAL(sizeof(dword_t), 4);
-  printf("sizeof(dinode_t) = %lu\n", sizeof(dinode_t));
   CU_ASSERT_EQUAL_FATAL(BLOCKSIZE % sizeof(dinode_t), 0);
 }
 
