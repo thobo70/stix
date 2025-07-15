@@ -135,6 +135,7 @@ set(TEST_UNIT_SRC
   tests/unit/test_clist_tstcon.c
   tests/unit/test_fsck.c
   tests/unit/test_mkfs.c
+  tests/unit/test_multiple_filesystems.c
   tests/unit/test_mount.c
   tests/unit/test_endian.c
   tests/unit/test_active_inode_detection.c

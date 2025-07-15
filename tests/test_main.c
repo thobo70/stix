@@ -82,6 +82,11 @@ extern void test_mount_superblock_handling(void);
 extern void test_mount_umount_edge_cases(void);
 extern void test_mount_umount_comprehensive(void);
 
+// Multiple filesystem management tests
+extern void test_multiple_filesystem_creation(void);
+extern void test_filesystem_table_limits(void);
+extern void test_concurrent_filesystem_operations(void);
+
 // Endian independence tests
 extern void test_endian_conversion_functions(void);
 extern void test_endian_magic_number_validation(void);
@@ -144,6 +149,9 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_mkfs_complete_filesystem_pass),
   CUNIT_CI_TEST(test_mkfs_edge_cases_pass),
   CUNIT_CI_TEST(test_filesystem_mkfs_fresh_creation),
+  CUNIT_CI_TEST(test_multiple_filesystem_creation),
+  CUNIT_CI_TEST(test_filesystem_table_limits),
+  CUNIT_CI_TEST(test_concurrent_filesystem_operations),
   CUNIT_CI_TEST(test_typesize_pass),
   CUNIT_CI_TEST(test_buffer_pass),
   CUNIT_CI_TEST(test_block_pass),
@@ -189,5 +197,8 @@ CUNIT_CI_RUN(
   CUNIT_CI_TEST(test_endian_mkfs_integration),
   CUNIT_CI_TEST(test_endian_byte_representation),
   CUNIT_CI_TEST(test_improved_active_inode_detection),
-  CUNIT_CI_TEST(test_file_open_detection)
+  CUNIT_CI_TEST(test_file_open_detection),
+  CUNIT_CI_TEST(test_multiple_filesystem_creation),
+  CUNIT_CI_TEST(test_filesystem_table_limits),
+  CUNIT_CI_TEST(test_concurrent_filesystem_operations)
 )
